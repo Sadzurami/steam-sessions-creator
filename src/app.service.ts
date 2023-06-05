@@ -38,13 +38,13 @@ export class AppService implements OnModuleInit {
   }
 
   private catchExceptions() {
-    //   process.on('uncaughtException', (error) => {
-    //     this.logger.error(new Error('Uncaught exception', { cause: error }));
-    //     this.shutdown();
-    //   });
-    //   process.on('unhandledRejection', (reason) => {
-    //     this.logger.error(new Error('Unhandled rejection', { cause: reason }));
-    //     this.shutdown();
-    //   });
+    process.on('uncaughtException', (error) => {
+      this.logger.error(new Error('Uncaught exception', { cause: error }));
+      this.shutdown();
+    });
+    process.on('unhandledRejection', (reason) => {
+      this.logger.error(new Error('Unhandled rejection', { cause: reason }));
+      this.shutdown();
+    });
   }
 }
