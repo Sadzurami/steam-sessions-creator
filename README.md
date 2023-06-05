@@ -8,7 +8,7 @@ All you need to know, thats steam session represents all-in-one data for manipul
 
 Typically, steam session contains:
 
-```json
+```sh
 {
   "Username": "...", // steam username
   "Password": "...", // steam password
