@@ -149,13 +149,13 @@ ssc create -a username:password -s ./maFiles/*.maFile
 Create steam session with provided account credentials asf db files:
 
 ```
-ssc create -a <username>:<password> -d <path/to/asf/db/files>
+ssc create -a <username>:<password> -s <path/to/asf/db/files>
 ```
 
 Example:
 
 ```
-ssc create -a username:password -d ./asf/*.db
+ssc create -a username:password -s ./asf/*.db
 ```
 
 ---
