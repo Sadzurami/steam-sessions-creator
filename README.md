@@ -79,13 +79,13 @@ ssc create -a username1:password1 username2:password2
 Create steam session with provided platform:
 
 ```
-ssc create -a <username>:<password> --refresh-token-platform <platform>
+ssc create -a <username>:<password> --refresh-tokens-platform <platform>
 ```
 
 Example:
 
 ```
-ssc create -a <username>:<password> --refresh-token-platform mobile
+ssc create -a <username>:<password> --refresh-tokens-platform mobile
 ```
 
 ---

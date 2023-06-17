@@ -161,7 +161,7 @@ Supported protocols:
     choices: ['web', 'mobile', 'desktop'],
     defaultValue: 'desktop',
   })
-  private parseRefreshTokenPlatformOption(val: string) {
+  private parseRefreshTokensPlatformOption(val: string) {
     return val;
   }
 
