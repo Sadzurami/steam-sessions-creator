@@ -9,12 +9,14 @@ import { ExportSessionsService } from '../../modules/export-sessions/export-sess
 import { ProxiesImportService } from '../../modules/proxies-import/proxies-import.service';
 import { ProxiesService } from '../../modules/proxies/proxies.service';
 import { SecretsImportService } from '../../modules/secrets-import/secrets-import.service';
+import { SteamTokensService } from '../../modules/steam-tokens/steam-tokens.service';
 import { CreateSessionsService } from './create-sessions.service';
 
 interface CreateCommandOptions {
   accounts: string | string[];
   secrets: string | string[];
   proxies: string | string[];
+  refreshTokensPlatform: 'web' | 'mobile' | 'desktop';
   output: string;
 }
 
@@ -32,6 +34,7 @@ export class CreateSessionsCommand extends CommandRunner {
     private readonly secretsImportService: SecretsImportService,
     private readonly proxiesImportService: ProxiesImportService,
     private readonly proxiesService: ProxiesService,
+    private readonly steamTokensService: SteamTokensService,
   ) {
     super();
   }
@@ -55,6 +58,9 @@ export class CreateSessionsCommand extends CommandRunner {
 
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
+
+      const refreshTokensPlatform = options.refreshTokensPlatform;
+      this.steamTokensService.setRefreshTokensPlatform(refreshTokensPlatform);
 
       const output = path.resolve(outputOptionInput);
       await this.exportSessionsService.setOutputPath(output);
@@ -146,6 +152,16 @@ Supported protocols:
     defaultValue: './sessions',
   })
   private parseOutputOption(val: string) {
+    return val;
+  }
+
+  @Option({
+    flags: '--refresh-token-platform <platform>',
+    description: 'Specify the platform on which the refresh tokens will be used.',
+    choices: ['web', 'mobile', 'desktop'],
+    defaultValue: 'desktop',
+  })
+  private parseRefreshTokenPlatformOption(val: string) {
     return val;
   }
 

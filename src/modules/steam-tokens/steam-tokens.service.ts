@@ -13,6 +13,8 @@ export class SteamTokensService {
   private readonly logger = new Logger(SteamTokensService.name);
   private readonly throttledConnections = new Cache<string, boolean>({ ttl: 18 * 1000 + 1000 });
 
+  private refreshTokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
+
   constructor(private readonly proxiesService: ProxiesService) {}
 
   public async createRefreshToken(account: Account, useProxy = false) {
@@ -30,7 +32,7 @@ export class SteamTokensService {
       sessionOptions[proxyType] = proxy.toString();
     }
 
-    const session = new LoginSession(EAuthTokenPlatformType.SteamClient, sessionOptions);
+    const session = new LoginSession(this.refreshTokensPlatform, sessionOptions);
     session.loginTimeout = 35000;
 
     try {
@@ -76,6 +78,14 @@ export class SteamTokensService {
     } catch (error) {
       throw new Error('An error occurred while decoding refresh token', { cause: error });
     }
+  }
+
+  public setRefreshTokensPlatform(platform: string) {
+    if (!platform) return;
+    if (platform === 'web') this.refreshTokensPlatform = EAuthTokenPlatformType.WebBrowser;
+    else if (platform === 'mobile') this.refreshTokensPlatform = EAuthTokenPlatformType.MobileApp;
+    else if (platform === 'desktop') this.refreshTokensPlatform = EAuthTokenPlatformType.SteamClient;
+    else throw new Error('Invalid platform');
   }
 
   private inferConnectionId(id?: string) {
