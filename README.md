@@ -85,7 +85,7 @@ ssc create -a <username>:<password> --refresh-tokens-platform <platform>
 Example:
 
 ```
-ssc create -a <username>:<password> --refresh-tokens-platform mobile
+ssc create -a username1:password1 --refresh-tokens-platform mobile
 ```
 
 ---
