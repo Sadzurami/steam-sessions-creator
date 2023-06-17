@@ -156,7 +156,7 @@ Supported protocols:
   }
 
   @Option({
-    flags: '--refresh-token-platform <platform>',
+    flags: '--refresh-tokens-platform <platform>',
     description: 'Specify the platform on which the refresh tokens will be used.',
     choices: ['web', 'mobile', 'desktop'],
     defaultValue: 'desktop',
