@@ -13,7 +13,7 @@ class Proxy implements IProxy {
   public readonly auth?: { username: string; password: string };
 
   constructor(proxy: string) {
-    if (!/^(https?|socks5?):\/\/([\w:@.^&]+)$/.test(proxy)) throw new Error('Invalid proxy');
+    if (!/^(https?|socks5?):\/\/([-\w:@.^&]+)$/.test(proxy)) throw new Error('Invalid proxy');
 
     const url = new URL(proxy);
 
