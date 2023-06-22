@@ -11,7 +11,7 @@ import { ProxiesService } from '../proxies/proxies.service';
 @Injectable()
 export class SteamTokensService {
   private readonly logger = new Logger(SteamTokensService.name);
-  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 18 * 1000 + 1000 });
+  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 + 1000 });
 
   private refreshTokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
 
