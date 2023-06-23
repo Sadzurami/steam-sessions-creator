@@ -47,7 +47,7 @@ export class ProxiesService {
 
         clearInterval(interval);
         resolve(proxy);
-      }, 1000).unref();
+      }, 1000);
     });
 
     return proxy;

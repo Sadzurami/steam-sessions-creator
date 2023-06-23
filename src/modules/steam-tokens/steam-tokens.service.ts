@@ -113,7 +113,7 @@ export class SteamTokensService {
         if (this.throttledConnections.has(id)) return;
         clearInterval(interval);
         resolve();
-      }, 1000).unref();
+      }, 1000);
     });
   }
 }
