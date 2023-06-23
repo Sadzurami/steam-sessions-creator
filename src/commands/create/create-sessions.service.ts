@@ -56,9 +56,10 @@ export class CreateSessionsService {
 
     const queue = new pQueue({ concurrency });
 
-    let count = 0;
     const erroredAccounts: Account[] = [];
-    queue.on('next', () => this.logger.log(`Progress: ${++count}/${accounts.length}`));
+
+    let progressNow = 0;
+    queue.on('next', () => this.logger.log(`Progress: ${++progressNow}/${accounts.length}`));
 
     await queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
 
