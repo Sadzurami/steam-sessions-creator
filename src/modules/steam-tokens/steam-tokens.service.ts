@@ -43,6 +43,7 @@ export class SteamTokensService {
       if (actionRequired) throw new Error('Guard action required');
 
       await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35500 });
+      session.cancelLoginAttempt();
 
       // should be temporary workaround for
       // https://github.com/DoctorMcKay/node-steam-session/issues/22
@@ -52,6 +53,8 @@ export class SteamTokensService {
 
       return refreshToken;
     } catch (error) {
+      session.cancelLoginAttempt();
+
       if (error.eresult === EResult.RateLimitExceeded) {
         const throttleMinutes = 35;
 
@@ -66,8 +69,6 @@ export class SteamTokensService {
       }
 
       throw new Error('Failed to create refresh token', { cause: error });
-    } finally {
-      session.cancelLoginAttempt();
     }
   }
 
