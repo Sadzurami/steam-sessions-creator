@@ -116,7 +116,7 @@ export class CreateSessionsService {
   private async createRefreshToken(account: Account) {
     const useProxy = this.proxiesService.getProxiesCount() > 0;
     try {
-      const token = await pRetry(() => this.steamTokensService.createRefreshToken(account, useProxy), { retries: 3 });
+      const token = await pRetry(() => this.steamTokensService.createRefreshToken(account, useProxy), { retries: 5 });
       return token;
     } catch (error) {
       throw new Error('Failed to create refresh token', { cause: error });
