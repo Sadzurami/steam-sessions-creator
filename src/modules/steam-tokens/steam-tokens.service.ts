@@ -42,7 +42,7 @@ export class SteamTokensService {
       const { actionRequired } = await session.startWithCredentials(credentials);
       if (actionRequired) throw new Error('Guard action required');
 
-      await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'] });
+      await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35500 });
 
       // should be temporary workaround for
       // https://github.com/DoctorMcKay/node-steam-session/issues/22
