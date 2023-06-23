@@ -15,7 +15,7 @@ import { LoggerService } from './logger.service';
           level: configService.getOrThrow('app.environment') === 'production' ? 'info' : 'trace',
           base: null,
           transport: {
-            targets: [{ target: 'pino-pretty', level: 'trace', options: {} }],
+            targets: [{ target: 'pino-pretty', level: 'trace', options: { sync: true } }],
           },
         },
       }),
