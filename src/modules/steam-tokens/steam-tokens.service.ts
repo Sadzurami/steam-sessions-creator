@@ -43,6 +43,11 @@ export class SteamTokensService {
       if (actionRequired) throw new Error('Guard action required');
 
       await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'] });
+
+      // should be temporary workaround for
+      // https://github.com/DoctorMcKay/node-steam-session/issues/22
+      await session.getWebCookies();
+
       const refreshToken = session.refreshToken;
 
       return refreshToken;
