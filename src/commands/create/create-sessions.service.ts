@@ -1,5 +1,6 @@
 import pQueue from 'p-queue';
 import pRetry from 'p-retry';
+import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -61,13 +62,16 @@ export class CreateSessionsService {
     let progressNow = 0;
     queue.on('next', () => this.logger.log(`Progress: ${++progressNow}/${accounts.length}`));
 
-    await queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
+    queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
+    await queue.onIdle();
 
     if (erroredAccounts.length > 0) {
       this.logger.warn(
         `Failed to create sessions for the following accounts:\n${erroredAccounts.map((a) => a.username).join('\n')}`,
       );
     }
+
+    await delay(1000);
   }
 
   public assignSecretsToAccounts(accounts: Account[], secrets: Secrets[]) {
