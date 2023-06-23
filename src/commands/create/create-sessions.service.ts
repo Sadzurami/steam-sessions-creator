@@ -57,9 +57,16 @@ export class CreateSessionsService {
     const queue = new pQueue({ concurrency });
 
     let count = 0;
+    const erroredAccounts: Account[] = [];
     queue.on('next', () => this.logger.log(`Progress: ${++count}/${accounts.length}`));
 
-    await queue.addAll(accounts.map((account) => () => this.createAndExportSession(account)));
+    await queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
+
+    if (erroredAccounts.length > 0) {
+      this.logger.warn(
+        `Failed to create sessions for the following accounts:\n${erroredAccounts.map((a) => a.username).join('\n')}`,
+      );
+    }
   }
 
   public assignSecretsToAccounts(accounts: Account[], secrets: Secrets[]) {
