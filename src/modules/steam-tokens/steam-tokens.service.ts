@@ -13,7 +13,7 @@ export class SteamTokensService {
   private readonly logger = new Logger(SteamTokensService.name);
   private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 + 1000 });
 
-  private refreshTokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
+  private tokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
 
   constructor(private readonly proxiesService: ProxiesService) {}
 
@@ -32,7 +32,7 @@ export class SteamTokensService {
       sessionOptions[proxyType] = proxy.toString();
     }
 
-    const session = new LoginSession(this.refreshTokensPlatform, sessionOptions);
+    const session = new LoginSession(this.tokensPlatform, sessionOptions);
     session.loginTimeout = 35000;
 
     try {
@@ -84,9 +84,9 @@ export class SteamTokensService {
 
   public setPlatform(platform: string) {
     if (!platform) return;
-    if (platform === 'web') this.refreshTokensPlatform = EAuthTokenPlatformType.WebBrowser;
-    else if (platform === 'mobile') this.refreshTokensPlatform = EAuthTokenPlatformType.MobileApp;
-    else if (platform === 'desktop') this.refreshTokensPlatform = EAuthTokenPlatformType.SteamClient;
+    if (platform === 'web') this.tokensPlatform = EAuthTokenPlatformType.WebBrowser;
+    else if (platform === 'mobile') this.tokensPlatform = EAuthTokenPlatformType.MobileApp;
+    else if (platform === 'desktop') this.tokensPlatform = EAuthTokenPlatformType.SteamClient;
     else throw new Error('Invalid platform');
 
     this.logger.log(`Platform set to: ${platform}`);
