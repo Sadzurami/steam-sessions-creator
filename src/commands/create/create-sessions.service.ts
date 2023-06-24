@@ -110,7 +110,7 @@ export class CreateSessionsService {
         identitySecret: account.identitySecret,
       });
 
-      this.logger.log(`Session for ${account.username} successfully created`);
+      this.logger.log(`Session created: ${account.username}`);
 
       return session;
     } catch (error) {
