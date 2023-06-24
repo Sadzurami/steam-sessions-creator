@@ -16,7 +16,7 @@ interface CreateCommandOptions {
   accounts: string | string[];
   secrets: string | string[];
   proxies: string | string[];
-  refreshTokensPlatform: 'web' | 'mobile' | 'desktop';
+  platform: 'web' | 'mobile' | 'desktop';
   output: string;
 }
 
@@ -59,8 +59,8 @@ export class CreateSessionsCommand extends CommandRunner {
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
 
-      const refreshTokensPlatform = options.refreshTokensPlatform;
-      this.steamTokensService.setRefreshTokensPlatform(refreshTokensPlatform);
+      const platform = options.platform;
+      this.steamTokensService.setPlatform(platform);
 
       const output = path.resolve(outputOptionInput);
       await this.exportSessionsService.setOutputPath(output);
@@ -156,12 +156,12 @@ Supported protocols:
   }
 
   @Option({
-    flags: '--refresh-tokens-platform <platform>',
-    description: 'Specify the platform on which the refresh tokens will be used.',
+    flags: '--platform <platform>',
+    description: 'Specify the platform on which session will be used.',
     choices: ['web', 'mobile', 'desktop'],
     defaultValue: 'desktop',
   })
-  private parseRefreshTokensPlatformOption(val: string) {
+  private parsePlatformOption(val: string) {
     return val;
   }
 

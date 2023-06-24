@@ -86,14 +86,14 @@ export class SteamTokensService {
     }
   }
 
-  public setRefreshTokensPlatform(platform: string) {
+  public setPlatform(platform: string) {
     if (!platform) return;
     if (platform === 'web') this.refreshTokensPlatform = EAuthTokenPlatformType.WebBrowser;
     else if (platform === 'mobile') this.refreshTokensPlatform = EAuthTokenPlatformType.MobileApp;
     else if (platform === 'desktop') this.refreshTokensPlatform = EAuthTokenPlatformType.SteamClient;
     else throw new Error('Invalid platform');
 
-    this.logger.log(`Refresh tokens platform set to: ${platform}`);
+    this.logger.log(`Platform set to: ${platform}`);
   }
 
   private inferConnectionId(id?: string) {
