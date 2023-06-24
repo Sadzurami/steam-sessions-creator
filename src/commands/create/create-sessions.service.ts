@@ -49,8 +49,6 @@ export class CreateSessionsService {
   ) {}
 
   public async createAndExportSessions(accounts: Account[]) {
-    this.logger.log(`Creating sessions for ${accounts.length} accounts`);
-
     const proxiesCount = this.proxiesService.getProxiesCount();
     const concurrency = Math.min(Math.max(proxiesCount, 1), 100);
     this.logger.log(`Concurrency limit: ${concurrency}`);
@@ -62,6 +60,7 @@ export class CreateSessionsService {
     let progressNow = 0;
     queue.on('next', () => this.logger.log(`Progress: ${++progressNow}/${accounts.length}`));
 
+    this.logger.log(`Creating sessions for ${accounts.length} accounts`);
     queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
     await queue.onIdle();
 
