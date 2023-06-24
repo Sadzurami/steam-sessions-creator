@@ -43,14 +43,9 @@ export class SteamTokensService {
       if (actionRequired) throw new Error('Guard action required');
 
       await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35500 });
-      session.cancelLoginAttempt();
 
-      const refreshToken = session.refreshToken;
-
-      return refreshToken;
+      return session.refreshToken;
     } catch (error) {
-      session.cancelLoginAttempt();
-
       if (error.eresult === EResult.RateLimitExceeded) {
         const throttleMinutes = 35;
 
@@ -65,6 +60,8 @@ export class SteamTokensService {
       }
 
       throw new Error('Failed to create refresh token', { cause: error });
+    } finally {
+      session.cancelLoginAttempt();
     }
   }
 
