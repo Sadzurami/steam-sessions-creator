@@ -89,7 +89,7 @@ export class SteamTokensService {
     else if (platform === 'desktop') this.tokensPlatform = EAuthTokenPlatformType.SteamClient;
     else throw new Error('Invalid platform');
 
-    this.logger.log(`Platform set to: ${platform}`);
+    this.logger.log(`Platform set: ${platform}`);
   }
 
   private inferConnectionId(id?: string) {
