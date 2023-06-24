@@ -8,7 +8,7 @@ import { Proxy } from '../../interfaces/proxy.interface';
 @Injectable()
 export class ProxiesService {
   private readonly proxies: Map<string, Proxy> = new Map();
-  private readonly throttledProxies = new Cache<string, Proxy>({ ttl: 35 * 1000 + 1000 });
+  private readonly throttledProxies = new Cache<string, boolean>({ ttl: 35 * 1000 + 1000 });
   private readonly proxiesUsageQueue = new pQueue({ concurrency: 1 });
 
   public setProxies(proxies: Proxy[]) {
@@ -19,8 +19,8 @@ export class ProxiesService {
     }
   }
 
-  public async getProxy() {
-    if (this.proxies.size === 0) throw new Error('No proxies available');
+  public async getProxy(): Promise<Proxy | null> {
+    if (this.proxies.size === 0) return null;
     const proxy = await this.proxiesUsageQueue.add(() => this.fetchProxy());
     this.throttleProxy(proxy);
     return proxy;
@@ -30,10 +30,10 @@ export class ProxiesService {
     return this.proxies.size;
   }
 
-  public throttleProxy(proxy: Proxy, timeoutMs?: number) {
+  public throttleProxy(proxy: Proxy | string, timeoutMs?: number) {
     const options: CacheSetOptions = {};
     if (timeoutMs) options.ttl = timeoutMs;
-    this.throttledProxies.set(proxy.toString(), proxy, options);
+    this.throttledProxies.set(proxy.toString(), true, options);
   }
 
   private async fetchProxy() {

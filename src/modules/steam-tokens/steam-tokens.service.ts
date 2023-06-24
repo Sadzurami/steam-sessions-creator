@@ -11,57 +11,42 @@ import { ProxiesService } from '../proxies/proxies.service';
 @Injectable()
 export class SteamTokensService {
   private readonly logger = new Logger(SteamTokensService.name);
-  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 + 1000 });
+  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 });
 
   private tokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
 
   constructor(private readonly proxiesService: ProxiesService) {}
 
-  public async createRefreshToken(account: Account, useProxy = false) {
-    const proxy = useProxy ? await this.proxiesService.getProxy() : null;
+  public async createRefreshToken(account: Account) {
+    const proxy = await this.proxiesService.getProxy();
 
-    const connectionId = this.inferConnectionId(proxy?.toString());
-    await this.waitConnectionLimitReset(connectionId);
-    this.throttleConnection(connectionId);
-    if (proxy) this.proxiesService.throttleProxy(proxy);
+    const connectionId = this.inferConnectionId((proxy || '').toString());
+    await this.waitConnectionLimitReset(connectionId).then(() => this.throttleConnection(connectionId));
 
-    const sessionOptions = {};
-
-    if (proxy) {
-      const proxyType = proxy.protocol.includes('socks') ? 'socksProxy' : 'httpProxy';
-      sessionOptions[proxyType] = proxy.toString();
-    }
-
-    const session = new LoginSession(this.tokensPlatform, sessionOptions);
-    session.loginTimeout = 35000;
+    let loginSession: LoginSession;
 
     try {
+      const loginSessionOptions = {};
+      if (proxy) loginSessionOptions[proxy.protocol.includes('socks') ? 'socksProxy' : 'httpProxy'] = proxy.toString();
+
+      loginSession = new LoginSession(this.tokensPlatform, loginSessionOptions);
+
       const credentials = { accountName: account.username, password: account.password } as any;
       if (account.sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(account.sharedSecret);
 
-      const { actionRequired } = await session.startWithCredentials(credentials);
-      if (actionRequired) throw new Error('Guard action required');
+      loginSession
+        .startWithCredentials(credentials)
+        .then((result) => result.actionRequired && loginSession.emit('error', new Error('Guard action required')))
+        .catch((error) => loginSession.emit('error', error));
 
-      await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35500 });
+      await pEvent(loginSession, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35000 });
 
-      return session.refreshToken;
+      return loginSession.refreshToken;
     } catch (error) {
-      if (error.eresult === EResult.RateLimitExceeded) {
-        const throttleMinutes = 35;
-
-        this.throttleConnection(connectionId, throttleMinutes * 60 * 1000);
-        if (proxy) this.proxiesService.throttleProxy(proxy, throttleMinutes * 60 * 1000);
-
-        this.logger.warn(
-          `${
-            useProxy ? 'Proxy' : 'Direct'
-          } connection throttled for ${throttleMinutes} minutes due to rate limit exceeded`,
-        );
-      }
-
+      if (error.eresult === EResult.RateLimitExceeded) this.throttleConnection(connectionId, 35 * 60 * 1000);
       throw new Error('Failed to create refresh token', { cause: error });
     } finally {
-      session.cancelLoginAttempt();
+      if (loginSession) loginSession.cancelLoginAttempt();
     }
   }
 
@@ -93,18 +78,24 @@ export class SteamTokensService {
     return id || 'localhost';
   }
 
-  private throttleConnection(id: string, timeoutMs?: number) {
+  private throttleConnection(connectionId: string, timeoutMs?: number) {
+    connectionId = this.inferConnectionId(connectionId);
+
     const options: CacheSetOptions = {};
     if (timeoutMs) options.ttl = timeoutMs;
-    this.throttledConnections.set(id, true, options);
+
+    this.throttledConnections.set(connectionId, true, options);
+    if (this.inferConnectionId() !== connectionId) this.proxiesService.throttleProxy(connectionId, timeoutMs);
   }
 
-  private async waitConnectionLimitReset(id: string) {
-    if (!this.throttledConnections.has(id)) return;
+  private async waitConnectionLimitReset(connectionId: string) {
+    connectionId = this.inferConnectionId(connectionId);
+
+    if (!this.throttledConnections.has(connectionId)) return;
 
     await new Promise<void>((resolve) => {
       const interval = setInterval(() => {
-        if (this.throttledConnections.has(id)) return;
+        if (this.throttledConnections.has(connectionId)) return;
         clearInterval(interval);
         resolve();
       }, 1000);
