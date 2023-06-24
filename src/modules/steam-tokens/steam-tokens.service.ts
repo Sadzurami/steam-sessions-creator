@@ -45,10 +45,6 @@ export class SteamTokensService {
       await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35500 });
       session.cancelLoginAttempt();
 
-      // should be temporary workaround for
-      // https://github.com/DoctorMcKay/node-steam-session/issues/22
-      await session.getWebCookies();
-
       const refreshToken = session.refreshToken;
 
       return refreshToken;
