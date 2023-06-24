@@ -66,7 +66,6 @@ export class CreateSessionsCommand extends CommandRunner {
       await this.exportSessionsService.setOutputPath(output);
       this.logger.log(`Output path: ${output}`);
 
-      this.logger.log('Creating sessions...');
       await this.createSessionsService.createAndExportSessions(accounts);
     } catch (error) {
       this.logger.error(error.message);
