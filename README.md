@@ -42,7 +42,7 @@ Typically, steam session contains:
 
 Download latest release from [here](https://github.com/Sadzurami/steam-sessions-creator/releases)
 
-### Commands
+## Commands
 
 ### `Create`
 
