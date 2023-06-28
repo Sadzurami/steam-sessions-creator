@@ -44,15 +44,13 @@ Download latest release from [here](https://github.com/Sadzurami/steam-sessions-
 
 ## Commands
 
-### `Create`
+> `create`
 
 Allows you to create steam session from scratch.
 
-### CLI Arguments
+### Options
 
-### `--accounts` (`-a`)
-
-**Required**
+> `--accounts` (`-a`) [required]
 
 Specify one or more accounts.
 Account can be specified as:
@@ -67,9 +65,9 @@ Supported formats:
 - username:password:sharedSecret
 - username:password:sharedSecret:identitySecret - ASF json
 
-### `--secrets` (`-s`)
+---
 
-**Default: no secrets**
+> `--secrets` (`-s`)
 
 Specify one or more secrets.
 
@@ -83,9 +81,11 @@ Supported formats:
 - maFile
 - ASF db
 
-### `--proxies` (`-p`)
+Default: no secrets
 
-**Default: no proxies**
+---
+
+> `--proxies` (`-p`)
 
 Specify one or more proxies.
 
@@ -99,18 +99,30 @@ Supported protocols:
 - http
 - https
 
-### `--concurrency` (`-c`)
+Default: no proxies
 
-**Default: 1, or the number of proxies.**
+---
+
+> `--concurrency` (`-c`)
 
 Specify the number of concurrent runs.
 
-### `--output` (`-o`)
+Default: 1, or the number of proxies.
 
-**Default: `./output`**
+---
+
+> `--output` (`-o`)
 
 Specify the output directory.
 
-### `--help` (`-h`)
+Default: `./sessions`
+
+---
+
+> `--help` (`-h`)
 
 Show help message and exit.
+
+# Questions And Suggestions
+
+If you have any suggestions, please contact me via email [mail.to.sadzurami@gmail.com](mailto:mail.to.sadzurami@gmail.com).
