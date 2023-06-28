@@ -9,14 +9,13 @@ import { ExportSessionsService } from '../../modules/export-sessions/export-sess
 import { ProxiesImportService } from '../../modules/proxies-import/proxies-import.service';
 import { ProxiesService } from '../../modules/proxies/proxies.service';
 import { SecretsImportService } from '../../modules/secrets-import/secrets-import.service';
-import { SteamTokensService } from '../../modules/steam-tokens/steam-tokens.service';
 import { CreateSessionsService } from './create-sessions.service';
 
 interface CreateCommandOptions {
   accounts: string | string[];
   secrets: string | string[];
   proxies: string | string[];
-  platform: 'web' | 'mobile' | 'desktop';
+  concurrency: number;
   output: string;
 }
 
@@ -34,7 +33,6 @@ export class CreateSessionsCommand extends CommandRunner {
     private readonly secretsImportService: SecretsImportService,
     private readonly proxiesImportService: ProxiesImportService,
     private readonly proxiesService: ProxiesService,
-    private readonly steamTokensService: SteamTokensService,
   ) {
     super();
   }
@@ -44,27 +42,28 @@ export class CreateSessionsCommand extends CommandRunner {
       const accountsOptionInput = await this.normalizeInput(options.accounts);
       const accounts = await this.accountsImportService.loadAccounts(accountsOptionInput);
       if (accounts.length === 0) throw new Error('No accounts found');
-      this.logger.log(`Accounts loaded: ${accounts.length}`);
+      this.logger.log(`Accounts: ${accounts.length}`);
 
       const secretsOptionInput = await this.normalizeInput(options.secrets);
       const secrets = await this.secretsImportService.loadSecrets(secretsOptionInput);
       this.createSessionsService.assignSecretsToAccounts(accounts, secrets);
-      this.logger.log(`Secrets loaded: ${secrets.length}`);
+      this.logger.log(`Secrets: ${secrets.length}`);
 
       const proxiesOptionInput = await this.normalizeInput(options.proxies);
       const proxies = await this.proxiesImportService.loadProxies(proxiesOptionInput);
       this.proxiesService.setProxies(proxies);
-      this.logger.log(`Proxies loaded: ${proxies.length}`);
+      this.logger.log(`Proxies: ${proxies.length}`);
+
+      const concurrencyOptionInput = options.concurrency;
+      const concurrency = Math.min(concurrencyOptionInput || proxies.length || 1, proxies.length || 1);
+      this.createSessionsService.setConcurrency(concurrency);
+      this.logger.log(`Concurrency: ${concurrency}`);
 
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
-
-      const platform = options.platform;
-      this.steamTokensService.setPlatform(platform);
-
       const output = path.resolve(outputOptionInput);
-      await this.exportSessionsService.setOutputPath(output);
-      this.logger.log(`Output path: ${output}`);
+      await this.exportSessionsService.setOutputPath(path.resolve(outputOptionInput));
+      this.logger.log(`Output: ${output}`);
 
       await this.createSessionsService.createAndExportSessions(accounts);
     } catch (error) {
@@ -146,21 +145,22 @@ Supported protocols:
   }
 
   @Option({
+    flags: '-c, --concurrency <concurrency>',
+    description: `Specify the number of concurrent runs.
+Default: 1, or the number of proxies.`,
+  })
+  private parseConcurrencyOption(val: string) {
+    const parsed = parseInt(val, 10);
+    if (Number.isNaN(parsed)) throw new Error('Concurrency must be a number');
+    return parsed;
+  }
+
+  @Option({
     flags: '-o, --output <output>',
     description: 'Specify the output directory.',
     defaultValue: './sessions',
   })
   private parseOutputOption(val: string) {
-    return val;
-  }
-
-  @Option({
-    flags: '--platform <platform>',
-    description: 'Specify the platform on which session will be used.',
-    choices: ['web', 'mobile', 'desktop'],
-    defaultValue: 'desktop',
-  })
-  private parsePlatformOption(val: string) {
     return val;
   }
 
