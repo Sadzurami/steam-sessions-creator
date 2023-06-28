@@ -105,7 +105,7 @@ Supported protocols:
 
 Specify the number of concurrent runs.
 
-### --output (`-o`)
+### `--output` (`-o`)
 
 **Default: `./output`**
 
