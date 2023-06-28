@@ -39,20 +39,20 @@ export class AccountsImportService {
     if (!Array.isArray(input)) input = [input];
     if (input.length === 0) return [];
 
-    const readResults = await Promise.all(input.map((input) => this.readAccountsFromInput(input)));
-
-    const accounts: Account[] = [];
+    let accounts: Account[] = [];
     const errors: string[] = [];
 
+    const readResults = await Promise.all(input.map((input) => this.readAccountsFromInput(input)));
     for (const result of readResults) {
       accounts.push(...result.values);
       errors.push(...result.errors);
     }
 
-    await delay(1000);
+    accounts = this.removeDuplicates(accounts);
 
     if (errors.length > 0 && accounts.length > 0) {
       this.logger.warn(`The following account sources are invalid:\n${errors.join('\n')}`);
+      await delay(1000);
 
       const { confirm } = await inquirer.prompt({
         type: 'confirm',
@@ -65,6 +65,12 @@ export class AccountsImportService {
     }
 
     return accounts;
+  }
+
+  private removeDuplicates(accounts: Account[]) {
+    const map = new Map<string, Account>();
+    for (const account of accounts) map.set(account.username, account);
+    return [...map.values()];
   }
 
   private async readAccountsFromInput(input: string) {

@@ -41,20 +41,19 @@ export class ProxiesImportService {
     if (!input) return [];
     if (!Array.isArray(input)) input = [input];
     if (input.length === 0) return [];
-
-    const readResults = await Promise.all(input.map((input) => this.readProxyFromInput(input)));
-
-    const proxies: Proxy[] = [];
+    let proxies: Proxy[] = [];
     const errors: string[] = [];
 
+    const readResults = await Promise.all(input.map((input) => this.readProxyFromInput(input)));
     for (const result of readResults) {
       proxies.push(...result.values);
       errors.push(...result.errors);
     }
 
+    proxies = this.removeDuplicates(proxies);
+
     if (errors.length > 0) {
       this.logger.warn(`The following proxy sources are invalid:\n${errors.join('\n')}`);
-
       await delay(1000);
 
       const { confirm } = await inquirer.prompt({
@@ -68,6 +67,12 @@ export class ProxiesImportService {
     }
 
     return proxies;
+  }
+
+  private removeDuplicates(proxies: Proxy[]) {
+    const map = new Map<string, Proxy>();
+    for (const proxy of proxies) map.set(proxy.toString(), proxy);
+    return [...map.values()];
   }
 
   private async readProxyFromInput(input: string) {

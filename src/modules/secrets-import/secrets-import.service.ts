@@ -45,19 +45,19 @@ export class SecretsImportService {
     if (!Array.isArray(input)) input = [input];
     if (input.length === 0) return [];
 
-    const readResults = await Promise.all(input.map((input) => this.readSecretsFromInput(input)));
-
-    const secrets: Secrets[] = [];
+    let secrets: Secrets[] = [];
     const errors: string[] = [];
 
+    const readResults = await Promise.all(input.map((input) => this.readSecretsFromInput(input)));
     for (const result of readResults) {
       secrets.push(...result.values);
       errors.push(...result.errors);
     }
 
+    secrets = this.removeDuplicates(secrets);
+
     if (errors.length > 0) {
       this.logger.warn(`The following secret sources are invalid:\n${errors.join('\n')}`);
-
       await delay(1000);
 
       const { confirm } = await inquirer.prompt({
@@ -72,6 +72,12 @@ export class SecretsImportService {
     }
 
     return secrets;
+  }
+
+  private removeDuplicates(secrets: Secrets[]) {
+    const map = new Map<string, Secrets>();
+    for (const secret of secrets) map.set(secret.username, secret);
+    return [...map.values()];
   }
 
   private async readSecretsFromInput(input: string) {
