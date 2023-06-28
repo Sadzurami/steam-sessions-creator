@@ -8,17 +8,18 @@ import { Account } from '../../interfaces/account.interface';
 import { Secrets } from '../../interfaces/secrets.interface';
 import { Session as ISession } from '../../interfaces/session.interface';
 import { ExportSessionsService } from '../../modules/export-sessions/export-sessions.service';
-import { ProxiesService } from '../../modules/proxies/proxies.service';
 import { SteamTokensService } from '../../modules/steam-tokens/steam-tokens.service';
 
 class Session implements ISession {
   public readonly username: string;
   public readonly password: string;
   public readonly steamId: string;
-  public readonly refreshToken: string;
+  public readonly webRefreshToken: string;
+  public readonly mobileRefreshToken: string;
+  public readonly desktopRefreshToken: string;
   public readonly sharedSecret: string | null = null;
   public readonly identitySecret: string | null = null;
-  public readonly schemaVersion: number = 1;
+  public readonly schemaVersion: number = 2;
 
   constructor(data: Omit<ISession, 'schemaVersion'>) {
     if (!data.username) throw new Error('Invalid username');
@@ -30,8 +31,14 @@ class Session implements ISession {
     if (!data.steamId) throw new Error('Invalid steamId');
     this.steamId = data.steamId;
 
-    if (!data.refreshToken) throw new Error('Invalid refreshToken');
-    this.refreshToken = data.refreshToken;
+    if (!data.webRefreshToken) throw new Error('Invalid webRefreshToken');
+    this.webRefreshToken = data.webRefreshToken;
+
+    if (!data.mobileRefreshToken) throw new Error('Invalid mobileRefreshToken');
+    this.mobileRefreshToken = data.mobileRefreshToken;
+
+    if (!data.desktopRefreshToken) throw new Error('Invalid desktopRefreshToken');
+    this.desktopRefreshToken = data.desktopRefreshToken;
 
     if (data.sharedSecret) this.sharedSecret = data.sharedSecret;
     if (data.identitySecret) this.identitySecret = data.identitySecret;
@@ -41,31 +48,48 @@ class Session implements ISession {
 @Injectable()
 export class CreateSessionsService {
   private readonly logger = new Logger(CreateSessionsService.name);
+  private concurrency = 1;
 
   constructor(
-    private readonly proxiesService: ProxiesService,
     private readonly steamTokensService: SteamTokensService,
     private readonly exportSessionsService: ExportSessionsService,
   ) {}
 
   public async createAndExportSessions(accounts: Account[]) {
-    const concurrency = Math.min(Math.max(this.proxiesService.getProxiesCount(), 1), 100);
-    this.logger.log(`Concurrency limit: ${concurrency}`);
+    const success: Account[] = [];
+    const fails: Account[] = [];
+    let progress = 0;
 
-    const queue = new pQueue({ concurrency });
+    const queue = new pQueue({ concurrency: this.concurrency });
 
-    let progressNow = 0;
-    queue.on('next', () => this.logger.log(`Progress: ${++progressNow}/${accounts.length}`));
+    for (const account of accounts) {
+      const task = async () => {
+        this.logger.log(`Creating: ${account.username}`);
 
-    this.logger.log(`Creating sessions for accounts: ${accounts.length}`);
+        try {
+          await this.createAndExportSession(account);
+          this.logger.log(`Success: ${account.username}`);
+          success.push(account);
+        } catch (error) {
+          this.logger.warn(`Fail: ${account.username}`);
+          fails.push(account);
+        }
 
-    const erroredAccounts: Account[] = [];
-    queue.addAll(accounts.map((a) => () => this.createAndExportSession(a).catch(() => erroredAccounts.push(a))));
+        this.logger.verbose(`Progress: ${++progress}/${accounts.length}`);
+      };
+
+      queue.add(task);
+    }
+
     await queue.onIdle();
-    if (!erroredAccounts.length) return;
 
-    this.logger.warn(`Failed to create sessions for accounts:\n${erroredAccounts.map((a) => a.username).join('\n')}`);
-    await delay(5000);
+    this.logger.log(`Success: ${success.length}`);
+    this.logger.log(`Fails: ${fails.length}`);
+
+    if (fails.length > 0) {
+      this.logger.warn(`Fails:\n${fails.map((a) => a.username).join('\n')}`);
+      await delay(1000);
+    }
   }
 
   public assignSecretsToAccounts(accounts: Account[], secrets: Secrets[]) {
@@ -86,6 +110,10 @@ export class CreateSessionsService {
     }
   }
 
+  public setConcurrency(concurrency: number) {
+    this.concurrency = concurrency;
+  }
+
   private async createAndExportSession(account: Account) {
     try {
       const session = await this.createSession(account);
@@ -97,31 +125,35 @@ export class CreateSessionsService {
 
   private async createSession(account: Account) {
     try {
-      const refreshToken = await this.createRefreshToken(account);
+      const queue = new pQueue({ concurrency: 1, interval: 30000, intervalCap: 1 });
 
-      const steamId = this.getSteamIdFromRefreshToken(refreshToken);
+      const webRefreshToken = await queue.add(() => this.createRefreshToken(account, 'web'));
+      const mobileRefreshToken = await queue.add(() => this.createRefreshToken(account, 'mobile'));
+      const desktopRefreshToken = await queue.add(() => this.createRefreshToken(account, 'desktop'));
+
+      const steamId = this.getSteamIdFromRefreshToken(webRefreshToken);
 
       const session = new Session({
+        webRefreshToken,
+        mobileRefreshToken,
+        desktopRefreshToken,
         steamId,
-        refreshToken,
-        username: account.username,
-        password: account.password,
-        sharedSecret: account.sharedSecret,
-        identitySecret: account.identitySecret,
+        ...account,
       });
-
-      this.logger.log(`Session created: ${account.username}`);
 
       return session;
     } catch (error) {
-      this.logger.error(`Failed to create session for ${account.username}`);
       throw new Error('Failed to create session', { cause: error });
     }
   }
 
-  private async createRefreshToken(account: Account) {
+  private async createRefreshToken(account: Account, platform: 'web' | 'mobile' | 'desktop') {
     try {
-      const token = await pRetry(() => this.steamTokensService.createRefreshToken(account), { retries: 5 });
+      const token = await pRetry(() => this.steamTokensService.createRefreshToken(account, platform), {
+        retries: 5,
+        minTimeout: 10000,
+        maxTimeout: 60000,
+      });
       return token;
     } catch (error) {
       throw new Error('Failed to create refresh token', { cause: error });

@@ -3,40 +3,34 @@ import { EAuthTokenPlatformType, EResult, LoginSession } from 'steam-session';
 import SteamTotp from 'steam-totp';
 
 import Cache, { SetOptions as CacheSetOptions } from '@isaacs/ttlcache';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { Account } from '../../interfaces/account.interface';
 import { ProxiesService } from '../proxies/proxies.service';
 
 @Injectable()
 export class SteamTokensService {
-  private readonly logger = new Logger(SteamTokensService.name);
   private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 });
-
-  private tokensPlatform: EAuthTokenPlatformType = EAuthTokenPlatformType.SteamClient;
 
   constructor(private readonly proxiesService: ProxiesService) {}
 
-  public async createRefreshToken(account: Account) {
+  public async createRefreshToken(account: Account, platform: 'web' | 'mobile' | 'desktop') {
+    const loginSessionPlatform = this.inferLoginSessionPlatform(platform);
+
     const proxy = await this.proxiesService.getProxy();
 
     const connectionId = this.inferConnectionId((proxy || '').toString());
     await this.waitConnectionLimitReset(connectionId).then(() => this.throttleConnection(connectionId));
 
-    let loginSession: LoginSession;
+    const loginSessionOptions = {};
+    if (proxy) loginSessionOptions[proxy.protocol.includes('socks') ? 'socksProxy' : 'httpProxy'] = proxy.toString();
+
+    const loginSession = new LoginSession(loginSessionPlatform, loginSessionOptions);
+    loginSession.on('error', () => {}); // fallback errors handling
 
     try {
-      const loginSessionOptions = {};
-      if (proxy) loginSessionOptions[proxy.protocol.includes('socks') ? 'socksProxy' : 'httpProxy'] = proxy.toString();
-
-      loginSession = new LoginSession(this.tokensPlatform, loginSessionOptions);
-
       const credentials = { accountName: account.username, password: account.password } as any;
       if (account.sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(account.sharedSecret);
-
-      // fallback errors handling
-      loginSession.on('error', () => {});
-      loginSession.on('timeout', () => {});
 
       loginSession
         .startWithCredentials(credentials)
@@ -71,14 +65,11 @@ export class SteamTokensService {
     }
   }
 
-  public setPlatform(platform: string) {
-    if (!platform) return;
-    if (platform === 'web') this.tokensPlatform = EAuthTokenPlatformType.WebBrowser;
-    else if (platform === 'mobile') this.tokensPlatform = EAuthTokenPlatformType.MobileApp;
-    else if (platform === 'desktop') this.tokensPlatform = EAuthTokenPlatformType.SteamClient;
+  private inferLoginSessionPlatform(platform: 'web' | 'mobile' | 'desktop'): EAuthTokenPlatformType {
+    if (platform === 'web') return EAuthTokenPlatformType.WebBrowser;
+    else if (platform === 'mobile') return EAuthTokenPlatformType.MobileApp;
+    else if (platform === 'desktop') return EAuthTokenPlatformType.SteamClient;
     else throw new Error('Invalid platform');
-
-    this.logger.log(`Platform set: ${platform}`);
   }
 
   private inferConnectionId(id?: string) {

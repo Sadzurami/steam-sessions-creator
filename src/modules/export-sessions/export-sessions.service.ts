@@ -36,15 +36,13 @@ export class ExportSessionsService {
   }
 
   private serializeSession(session: Session) {
-    const serializedObject = {
-      Username: session.username,
-      Password: session.password,
-      SteamId: session.steamId,
-      RefreshToken: session.refreshToken,
-      SharedSecret: session.sharedSecret,
-      IdentitySecret: session.identitySecret,
-      SchemaVersion: session.schemaVersion,
-    };
+    const serializedObject = Object.fromEntries(
+      Object.entries(session).map(([key, value]) => {
+        key = key[0].toUpperCase() + key.slice(1);
+        value = value || null;
+        return [key, value];
+      }),
+    );
 
     const serializedString = JSON.stringify(serializedObject, null, 2);
 
