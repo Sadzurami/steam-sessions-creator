@@ -65,8 +65,6 @@ Supported formats:
 - username:password:sharedSecret
 - username:password:sharedSecret:identitySecret - ASF json
 
----
-
 > --secrets (-s)
 
 Specify one or more secrets.
@@ -82,8 +80,6 @@ Supported formats:
 - ASF db
 
 Default: no secrets
-
----
 
 > --proxies (-p)
 
@@ -101,23 +97,17 @@ Supported protocols:
 
 Default: no proxies
 
----
-
 > --concurrency (-c)
 
 Specify the number of concurrent runs.
 
 Default: 1, or the number of proxies.
 
----
-
 > --output (-o)
 
 Specify the output directory.
 
 Default: `./sessions`
-
----
 
 > --help (-h)
 
