@@ -50,7 +50,7 @@ Allows you to create steam session from scratch.
 
 ### Options
 
-> `--accounts` (`-a`) [required]
+> --accounts (-a) [required]
 
 Specify one or more accounts.
 Account can be specified as:
@@ -67,7 +67,7 @@ Supported formats:
 
 ---
 
-> `--secrets` (`-s`)
+> --secrets (-s)
 
 Specify one or more secrets.
 
@@ -85,7 +85,7 @@ Default: no secrets
 
 ---
 
-> `--proxies` (`-p`)
+> --proxies (-p)
 
 Specify one or more proxies.
 
@@ -103,7 +103,7 @@ Default: no proxies
 
 ---
 
-> `--concurrency` (`-c`)
+> --concurrency (-c)
 
 Specify the number of concurrent runs.
 
@@ -111,7 +111,7 @@ Default: 1, or the number of proxies.
 
 ---
 
-> `--output` (`-o`)
+> --output (-o)
 
 Specify the output directory.
 
@@ -119,7 +119,7 @@ Default: `./sessions`
 
 ---
 
-> `--help` (`-h`)
+> --help (-h)
 
 Show help message and exit.
 
