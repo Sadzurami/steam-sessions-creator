@@ -44,7 +44,7 @@ Download latest release from [here](https://github.com/Sadzurami/steam-sessions-
 
 ## Commands
 
-> `create`
+### `create`
 
 Allows you to create steam session from scratch.
 
