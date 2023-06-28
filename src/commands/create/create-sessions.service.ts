@@ -60,7 +60,7 @@ export class CreateSessionsService {
     const fails: Account[] = [];
     let progress = 0;
 
-    const queue = new pQueue({ concurrency: this.concurrency });
+    const queue = new pQueue({ concurrency: this.concurrency, interval: 10, intervalCap: 1 });
 
     for (const account of accounts) {
       const task = async () => {
@@ -75,7 +75,7 @@ export class CreateSessionsService {
           fails.push(account);
         }
 
-        this.logger.verbose(`Progress: ${++progress}/${accounts.length}`);
+        this.logger.log(`Progress: ${++progress}/${accounts.length}`);
       };
 
       queue.add(task);

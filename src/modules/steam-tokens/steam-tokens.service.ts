@@ -89,11 +89,17 @@ export class SteamTokensService {
   private async waitConnectionLimitReset(connectionId: string) {
     connectionId = this.inferConnectionId(connectionId);
 
-    if (!this.throttledConnections.has(connectionId)) return;
+    const execute = () => {
+      if (this.throttledConnections.has(connectionId)) return false;
+      this.throttleConnection(connectionId, 1000);
+      return true;
+    };
 
-    await new Promise<void>((resolve) => {
+    if (execute()) return;
+
+    return new Promise<void>((resolve) => {
       const interval = setInterval(() => {
-        if (this.throttledConnections.has(connectionId)) return;
+        if (!execute()) return;
         clearInterval(interval);
         resolve();
       }, 1000);

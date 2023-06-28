@@ -55,7 +55,7 @@ export class CreateSessionsCommand extends CommandRunner {
       this.logger.log(`Proxies: ${proxies.length}`);
 
       const concurrencyOptionInput = options.concurrency;
-      const concurrency = Math.min(concurrencyOptionInput || proxies.length || 1, proxies.length || 1);
+      const concurrency = proxies.length > 0 ? concurrencyOptionInput || proxies.length : 1;
       this.createSessionsService.setConcurrency(concurrency);
       this.logger.log(`Concurrency: ${concurrency}`);
 
@@ -152,6 +152,7 @@ Default: 1, or the number of proxies.`,
   private parseConcurrencyOption(val: string) {
     const parsed = parseInt(val, 10);
     if (Number.isNaN(parsed)) throw new Error('Concurrency must be a number');
+    if (parsed < 1) throw new Error('Concurrency must be greater than 0');
     return parsed;
   }
 
