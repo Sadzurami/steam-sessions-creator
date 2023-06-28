@@ -63,7 +63,8 @@ Supported formats:
 
 - username:password
 - username:password:sharedSecret
-- username:password:sharedSecret:identitySecret - ASF json
+- username:password:sharedSecret:identitySecret
+- ASF json
 
 > --secrets (-s)
 
