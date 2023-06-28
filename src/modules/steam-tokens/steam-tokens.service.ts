@@ -34,6 +34,10 @@ export class SteamTokensService {
       const credentials = { accountName: account.username, password: account.password } as any;
       if (account.sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(account.sharedSecret);
 
+      // fallback errors handling
+      loginSession.on('error', () => {});
+      loginSession.on('timeout', () => {});
+
       loginSession
         .startWithCredentials(credentials)
         .then((result) => result.actionRequired && loginSession.emit('error', new Error('Guard action required')))
@@ -41,7 +45,10 @@ export class SteamTokensService {
 
       await pEvent(loginSession, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35000 });
 
-      return loginSession.refreshToken;
+      const refreshToken = loginSession.refreshToken;
+      if (!refreshToken) throw new Error('Refresh token is empty');
+
+      return refreshToken;
     } catch (error) {
       if (error.eresult === EResult.RateLimitExceeded) this.throttleConnection(connectionId, 35 * 60 * 1000);
       throw new Error('Failed to create refresh token', { cause: error });
