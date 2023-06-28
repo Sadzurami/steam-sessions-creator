@@ -1,6 +1,6 @@
 # Steam Sessions Creator
 
-A simple cli app to create steam sessions.
+A simple CLI app for creating and managing steam sessions.
 
 ## What is a steam session?
 
@@ -8,19 +8,29 @@ All you need to know, thats steam session represents all-in-one data for manipul
 
 Typically, steam session contains:
 
-```
+```json
 {
-  "Username": "...", // steam username
-  "Password": "...", // steam password
-  "SteamId": "...", // steam id of account
-  "WebRefreshToken": "...", // refresh token for login via web
-  "MobileRefreshToken": "...", // refresh token for login via mobile app
-  "DesktopRefreshToken": "...", // refresh token for login via steam client
-  "SharedSecret": "...", // shared secret to generate 2fa codes (or null if 2fa disabled)
-  "IdentitySecret": "...", // identity secret to generate 2fa codes (or null if 2fa disabled)
-  "SchemaVersion": 2 // schema version of steam session
+  "Username": "...",
+  "Password": "...",
+  "SteamId": "...",
+  "WebRefreshToken": "...",
+  "MobileRefreshToken": "...",
+  "DesktopRefreshToken": "...",
+  "SharedSecret": "...",
+  "IdentitySecret": "...",
+  "SchemaVersion": 2
 }
 ```
+
+- `Username` - steam username
+- `Password` - steam password
+- `SteamId` - steam id of account
+- `WebRefreshToken` - refresh token for login via web
+- `MobileRefreshToken` - refresh token for login via mobile app
+- `DesktopRefreshToken` - refresh token for login via steam client
+- `SharedSecret` - shared secret to generate 2fa codes (or null if 2fa disabled)
+- `IdentitySecret` - identity secret to generate 2fa codes (or null if 2fa disabled)
+- `SchemaVersion` - schema version of steam session
 
 ## Features
 
@@ -30,168 +40,77 @@ Typically, steam session contains:
 
 ## Installation
 
-### From source
-
-```
-git clone
-cd steam-sessions-creator
-npm install (or yarn install)
-npm run build (or yarn run build)
-npx ssc --help (or yarn ssc --help)
-```
-
-### From prebuilt binaries
-
 Download latest release from [here](https://github.com/Sadzurami/steam-sessions-creator/releases)
 
-## Commands
+### Commands
 
 ### `Create`
 
 Allows you to create steam session from scratch.
 
-Create steam session with provided account credentials:
+### CLI Arguments
 
-```
-ssc create -a <username>:<password>
-```
+### `--accounts` (`-a`)
 
-Example:
+**Required**
 
-```
-ssc create -a username:password
-```
+Specify one or more accounts.
+Account can be specified as:
 
----
+- A simple string.
+- A file path to load accounts from (one account per line).
+- A glob pattern to load accounts from multiple files.
 
-Create steam session with provided 2 account credentials:
+Supported formats:
 
-```
-ssc create -a <username1>:<password1> <username2>:<password2>
-```
+- username:password
+- username:password:sharedSecret
+- username:password:sharedSecret:identitySecret - ASF json
 
-Example:
+### `--secrets` (`-s`)
 
-```
-ssc create -a username1:password1 username2:password2
-```
+**Default: no secrets**
 
----
+Specify one or more secrets.
 
-Create steam session with provided platform:
+Secret can be specified as:
 
-```
-ssc create -a <username>:<password> --platform <platform>
-```
+- A file path to load secrets from file.
+- A glob pattern to load secrets from multiple files.
 
-Example:
+Supported formats:
 
-```
-ssc create -a username1:password1 --platform mobile
-```
+- maFile
+- ASF db
 
----
+### `--proxies` (`-p`)
 
-Create steam session with provided account credentials in file:
+**Default: no proxies**
 
-```
-ssc create -a <path/to/accounts/file>
-```
+Specify one or more proxies.
 
-Example:
+Proxy can be specified as:
 
-```
-ssc create -a ./accounts.txt
-```
+- A string in the format `<protocol>://<username>:<password>@<host>:<port>`
+- A file path to load proxies from a text file.
 
----
+Supported protocols:
 
-Create steam session with provided account credentials in asf json files:
+- http
+- https
 
-```
-ssc create -a <path/to/asf/json/files>
-```
+### `--concurrency` (`-c`)
 
-Example:
+**Default: 1, or the number of proxies.**
 
-```
-ssc create -a ./asf/*.json
-```
+Specify the number of concurrent runs.
 
----
+### --output (`-o`)
 
-Create steam session with provided account credentials and proxy:
+**Default: `./output`**
 
-```
-ssc create -a <username>:<password> -p <proxy>
-```
+Specify the output directory.
 
-Example:
+### `--help` (`-h`)
 
-```
-ssc create -a username:password -p http://example.com:8080
-```
-
----
-
-Create steam session with provided account credentials and maFile:
-
-```
-ssc create -a <username>:<password> -s <path/to/maFile>
-```
-
-Example:
-
-```
-ssc create -a username:password -s ./username.maFile
-```
-
----
-
-Create steam session with provided account credentials and maFiles glob:
-
-```
-ssc create -a <username>:<password> -s <glob/to/maFiles>
-```
-
-Example:
-
-```
-ssc create -a username:password -s ./maFiles/*.maFile
-```
-
----
-
-Create steam session with provided account credentials asf db files:
-
-```
-ssc create -a <username>:<password> -s <path/to/asf/db/files>
-```
-
-Example:
-
-```
-ssc create -a username:password -s ./asf/*.db
-```
-
----
-
-Create steam session with provided account credentials and output path:
-
-```
-ssc create -a <username>:<password> -o <path/to/output>
-```
-
-Example:
-
-```
-ssc create -a username:password -o ./output
-```
-
----
-
-More info about `Create` command:
-
-```
-ssc create --help
-```
+Show help message and exit.
