@@ -9,6 +9,9 @@ export interface Config {
     directory: string;
     environment: 'development' | 'production';
   };
+  session: {
+    schemaVersion: number;
+  };
 }
 
 const getPackageJson = (): any => {
@@ -39,6 +42,9 @@ export default (): Config => {
       version: appVersion,
       directory: appDirectory,
       environment: env,
+    },
+    session: {
+      schemaVersion: 2,
     },
   };
 };

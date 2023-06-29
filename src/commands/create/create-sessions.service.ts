@@ -3,6 +3,7 @@ import pRetry from 'p-retry';
 import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { Account } from '../../interfaces/account.interface';
 import { Secrets } from '../../interfaces/secrets.interface';
@@ -19,9 +20,9 @@ class Session implements ISession {
   public readonly desktopRefreshToken: string;
   public readonly sharedSecret: string | null = null;
   public readonly identitySecret: string | null = null;
-  public readonly schemaVersion: number = 2;
+  public readonly schemaVersion: number = 0;
 
-  constructor(data: Omit<ISession, 'schemaVersion'>) {
+  constructor(data: ISession) {
     if (!data.username) throw new Error('Invalid username');
     this.username = data.username;
 
@@ -42,6 +43,8 @@ class Session implements ISession {
 
     if (data.sharedSecret) this.sharedSecret = data.sharedSecret;
     if (data.identitySecret) this.identitySecret = data.identitySecret;
+
+    if (data.schemaVersion) this.schemaVersion = data.schemaVersion;
   }
 }
 
@@ -53,6 +56,7 @@ export class CreateSessionsService {
   constructor(
     private readonly steamTokensService: SteamTokensService,
     private readonly exportSessionsService: ExportSessionsService,
+    private readonly configService: ConfigService,
   ) {}
 
   public async createAndExportSessions(accounts: Account[]) {
@@ -133,12 +137,15 @@ export class CreateSessionsService {
 
       const steamId = this.getSteamIdFromRefreshToken(webRefreshToken);
 
+      const schemaVersion = this.configService.getOrThrow<number>('session.schemaVersion');
+
       const session = new Session({
         webRefreshToken,
         mobileRefreshToken,
         desktopRefreshToken,
         steamId,
         ...account,
+        schemaVersion,
       });
 
       return session;
