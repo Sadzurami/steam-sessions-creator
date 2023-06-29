@@ -114,6 +114,21 @@ Default: `./sessions`
 
 Show help message and exit.
 
+### `validate`
+
+Allows you to validate steam session and get expiration date.
+
+### Options
+
+> --sessions (-s) [required]
+
+Specify one or more sessions.
+
+Session can be specified as:
+
+- A file path to load session from.
+- A glob pattern to load sessions from multiple files.
+
 # Questions And Suggestions
 
 If you have any suggestions, please contact me via email [mail.to.sadzurami@gmail.com](mailto:mail.to.sadzurami@gmail.com).
