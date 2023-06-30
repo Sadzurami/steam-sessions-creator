@@ -64,7 +64,8 @@ Supported formats:
 - username:password
 - username:password:sharedSecret
 - username:password:sharedSecret:identitySecret
-- ASF json
+- .json (asf) files
+- .steamsession (steam sessions creator) files
 
 > --secrets (-s)
 
