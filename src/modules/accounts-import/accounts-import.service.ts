@@ -89,6 +89,15 @@ export class AccountsImportService {
 
       if (content.length === 0) throw new Error('Empty file');
 
+      // session file
+      if (filePath.endsWith('.steamsession')) {
+        const readResults = this.readAccountFromSessionFile(content);
+        result.values.push(...readResults.values);
+        if (readResults.errors.length > 0) result.errors.push(filePath);
+
+        return result;
+      }
+
       // asf json
       if (filePath.endsWith('.json') && content.includes('"SteamLogin"')) {
         const readResults = this.readAccountFromAsfJson(content);
@@ -137,11 +146,11 @@ export class AccountsImportService {
     return result;
   }
 
-  private readAccountFromAsfJson(json: string) {
+  private readAccountFromAsfJson(fileContent: string) {
     const result: { values: Account[]; errors: string[] } = { values: [], errors: [] };
 
     try {
-      const { SteamLogin: username, SteamPassword: password } = JSON.parse(json);
+      const { SteamLogin: username, SteamPassword: password } = JSON.parse(fileContent);
 
       if (!username) throw new Error('Invalid username');
       if (!password) throw new Error('Invalid password');
@@ -149,7 +158,24 @@ export class AccountsImportService {
       const account = new Account(`${username}:${password}`);
       result.values.push(account);
     } catch (error) {
-      result.errors.push(json);
+      result.errors.push(fileContent);
+    }
+
+    return result;
+  }
+
+  private readAccountFromSessionFile(fileContent: string) {
+    const result: { values: Account[]; errors: string[] } = { values: [], errors: [] };
+
+    try {
+      const { Username, Password, SharedSecret, IdentitySecret } = JSON.parse(fileContent);
+      if (!Username) throw new Error('Invalid username');
+      if (!Password) throw new Error('Invalid password');
+
+      const account = new Account(`${Username}:${Password}:${SharedSecret || ''}:${IdentitySecret || ''}`);
+      result.values.push(account);
+    } catch (error) {
+      result.errors.push(fileContent);
     }
 
     return result;
