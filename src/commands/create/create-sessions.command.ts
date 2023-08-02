@@ -19,7 +19,7 @@ interface CreateCommandOptions {
   proxies: string | string[];
   concurrency: number;
   output: string;
-  ignoreCreated: boolean;
+  overwrite: boolean;
 }
 
 @Command({
@@ -57,11 +57,11 @@ export class CreateSessionsCommand extends CommandRunner {
       await this.exportSessionsService.setOutputPath(output);
       this.logger.log(`Output: ${output}`);
 
-      const ignoreCreatedSessions = options.ignoreCreated;
-      if (ignoreCreatedSessions) {
+      const overwriteExistingSessions = options.overwrite;
+      if (!overwriteExistingSessions) {
         const sessionsPaths = await this.normalizeInput(`${output}/*`);
         const existingSessions = await this.accountsImportService.loadAccounts(sessionsPaths);
-        this.logger.log(`Existing sessions: ${existingSessions.length}`);
+        this.logger.log(`Ignoring existing sessions: ${existingSessions.length}`);
         accounts = accounts.filter((account) => !existingSessions.some((a) => a.username === account.username));
       }
 
@@ -209,11 +209,11 @@ Default: 1, or the number of proxies.`,
   }
 
   @Option({
-    flags: '--ignore-created',
-    description: 'Ignore accounts that already have a session file in the output directory.',
+    flags: '--overwrite (-w)',
+    description: 'Overwrite existing sessions.',
     defaultValue: false,
   })
-  private parseIgnoreCreatedOption(val: string) {
+  private parseOverwriteOption(val: string) {
     return new CliUtilityService().parseBoolean(val);
   }
 

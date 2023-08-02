@@ -111,6 +111,12 @@ Specify the output directory.
 
 Default: `./sessions`
 
+> --overwrite (-w)
+
+Overwrite existing sessions.
+
+Default: false
+
 > --help (-h)
 
 Show help message and exit.
