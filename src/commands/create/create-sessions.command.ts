@@ -1,5 +1,5 @@
 import glob from 'fast-glob';
-import { Command, CommandRunner, Help, Option } from 'nest-commander';
+import { CliUtilityService, Command, CommandRunner, Help, Option } from 'nest-commander';
 import path from 'path';
 
 import { Logger } from '@nestjs/common';
@@ -17,6 +17,7 @@ interface CreateCommandOptions {
   proxies: string | string[];
   concurrency: number;
   output: string;
+  ignoreCreated: boolean;
 }
 
 @Command({
@@ -40,7 +41,7 @@ export class CreateSessionsCommand extends CommandRunner {
   public async run(args: string[], options: CreateCommandOptions) {
     try {
       const accountsOptionInput = await this.normalizeInput(options.accounts);
-      const accounts = await this.accountsImportService.loadAccounts(accountsOptionInput);
+      let accounts = await this.accountsImportService.loadAccounts(accountsOptionInput);
       if (accounts.length === 0) throw new Error('No accounts found');
       this.logger.log(`Accounts: ${accounts.length}`);
 
@@ -62,8 +63,18 @@ export class CreateSessionsCommand extends CommandRunner {
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
       const output = path.resolve(outputOptionInput);
-      await this.exportSessionsService.setOutputPath(path.resolve(outputOptionInput));
+      await this.exportSessionsService.setOutputPath(output);
       this.logger.log(`Output: ${output}`);
+
+      const ignoreCreatedSessions = options.ignoreCreated;
+      if (ignoreCreatedSessions) {
+        const sessionsPaths = await this.normalizeInput(`${output}/*`);
+        const existingSessions = await this.accountsImportService.loadAccounts(sessionsPaths);
+        this.logger.log(`Existing sessions: ${existingSessions.length}`);
+        accounts = accounts.filter((account) => !existingSessions.some((a) => a.username === account.username));
+      }
+
+      this.logger.log(`Creating sessions: ${accounts.length}`);
 
       await this.createSessionsService.createAndExportSessions(accounts);
     } catch (error) {
@@ -163,6 +174,15 @@ Default: 1, or the number of proxies.`,
   })
   private parseOutputOption(val: string) {
     return val;
+  }
+
+  @Option({
+    flags: '--ignore-created',
+    description: 'Ignore accounts that already have a session file in the output directory.',
+    defaultValue: false,
+  })
+  private parseIgnoreCreatedOption(val: string) {
+    return new CliUtilityService().parseBoolean(val);
   }
 
   @Help('afterAll')
