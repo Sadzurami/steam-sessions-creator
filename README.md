@@ -34,9 +34,9 @@ Typically, steam session contains:
 
 ## Features
 
-- Import accounts from file or [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/)
+- Import accounts from file, [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) or previously created steam sessions
 - Proxies support out of the box (http, https, socks5)
-- Steam Guard support from maFiles or [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/)
+- Steam Guard support from maFiles, [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) or previously created steam sessions
 
 ## Installation
 
