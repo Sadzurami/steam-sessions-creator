@@ -62,7 +62,7 @@ export class CreateSessionsCommand extends CommandRunner {
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
       const output = path.resolve(outputOptionInput);
-      await this.exportSessionsService.setOutputPath(path.resolve(outputOptionInput));
+      await this.exportSessionsService.setOutputPath(output);
       this.logger.log(`Output: ${output}`);
 
       await this.createSessionsService.createAndExportSessions(accounts);
