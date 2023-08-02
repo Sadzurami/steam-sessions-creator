@@ -1,18 +1,22 @@
+import { Cache } from 'cache-manager';
 import pEvent from 'p-event';
 import { EAuthTokenPlatformType, EResult, LoginSession } from 'steam-session';
 import SteamTotp from 'steam-totp';
 
-import Cache, { SetOptions as CacheSetOptions } from '@isaacs/ttlcache';
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { Account } from '../../interfaces/account.interface';
 import { ProxiesService } from '../proxies/proxies.service';
 
 @Injectable()
 export class SteamTokensService {
-  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 31 * 1000 });
+  private readonly connectionThrottlingTimeout = 31 * 1000;
 
-  constructor(private readonly proxiesService: ProxiesService) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private throttledConnections: Cache,
+    private readonly proxiesService: ProxiesService,
+  ) {}
 
   public async createRefreshToken(account: Account, platform: 'web' | 'mobile' | 'desktop') {
     const loginSessionPlatform = this.inferLoginSessionPlatform(platform);
@@ -20,7 +24,8 @@ export class SteamTokensService {
     const proxy = await this.proxiesService.getProxy();
 
     const connectionId = this.inferConnectionId((proxy || '').toString());
-    await this.waitConnectionLimitReset(connectionId).then(() => this.throttleConnection(connectionId));
+    await this.waitConnectionLimitReset(connectionId);
+    this.throttleConnection(connectionId, this.connectionThrottlingTimeout);
 
     const loginSessionOptions = {};
     if (proxy) loginSessionOptions[proxy.protocol.includes('socks') ? 'socksProxy' : 'httpProxy'] = proxy.toString();
@@ -97,16 +102,13 @@ export class SteamTokensService {
   }
 
   private inferConnectionId(id?: string) {
-    return id || 'localhost';
+    return `${SteamTokensService.name}:${id || 'localhost'}`;
   }
 
-  private throttleConnection(connectionId: string, timeoutMs?: number) {
+  private throttleConnection(connectionId: string, timeoutMs: number) {
     connectionId = this.inferConnectionId(connectionId);
 
-    const options: CacheSetOptions = {};
-    if (timeoutMs) options.ttl = timeoutMs;
-
-    this.throttledConnections.set(connectionId, true, options);
+    this.throttledConnections.set(connectionId, true, timeoutMs);
     if (this.inferConnectionId() !== connectionId) this.proxiesService.throttleProxy(connectionId, timeoutMs);
   }
 
@@ -114,7 +116,7 @@ export class SteamTokensService {
     connectionId = this.inferConnectionId(connectionId);
 
     const execute = () => {
-      if (this.throttledConnections.has(connectionId)) return false;
+      if (this.throttledConnections.get(connectionId)) return false;
       this.throttleConnection(connectionId, 1000);
       return true;
     };

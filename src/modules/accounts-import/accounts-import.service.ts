@@ -6,12 +6,13 @@ import { setTimeout as delay } from 'timers/promises';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Account as IAccount } from '../../interfaces/account.interface';
+import { Secrets } from '../../interfaces/secrets.interface';
 
 class Account implements IAccount {
   public readonly username: string;
   public readonly password: string;
-  public readonly sharedSecret: string | null = null;
-  public readonly identitySecret: string | null = null;
+  public sharedSecret: string | null = null;
+  public identitySecret: string | null = null;
 
   constructor(account: string) {
     account = account.trim();
@@ -65,6 +66,24 @@ export class AccountsImportService {
     }
 
     return accounts;
+  }
+
+  public assignSecretsToAccounts(accounts: Account[], secrets: Secrets[]) {
+    const secretsMap = new Map<string, Secrets>();
+    for (const secret of secrets) {
+      secretsMap.set(secret.username, secret);
+      // some existing steam-oriented apps are case-insensitive to usernames in secrets
+      secretsMap.set(secret.username.toLowerCase(), secret);
+    }
+
+    for (const account of accounts) {
+      let secret = secretsMap.get(account.username);
+      if (!secret) secret = secretsMap.get(account.username.toLowerCase());
+      if (!secret) continue;
+
+      account.sharedSecret = secret.sharedSecret;
+      account.identitySecret = secret.identitySecret;
+    }
   }
 
   private removeDuplicates(accounts: Account[]) {

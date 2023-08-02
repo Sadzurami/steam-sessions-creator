@@ -34,10 +34,11 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@isaacs/ttlcache": "^1.4.0",
+    "@nestjs/cache-manager": "^2.1.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.3.2",
     "@nestjs/core": "^9.0.0",
+    "cache-manager": "^5.2.3",
     "fast-glob": "^3.2.12",
     "inquirer": "8.2.5",
     "nest-commander": "^3.10.0",

@@ -1,15 +1,17 @@
+import { Cache } from 'cache-manager';
 import pQueue from 'p-queue';
 
-import Cache, { SetOptions as CacheSetOptions } from '@isaacs/ttlcache';
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { Proxy } from '../../interfaces/proxy.interface';
 
 @Injectable()
 export class ProxiesService {
   private readonly proxies: Map<string, Proxy> = new Map();
-  private readonly throttledProxies = new Cache<string, boolean>({ ttl: 31 * 1000 });
   private readonly proxiesUsageQueue = new pQueue({ concurrency: 1 });
+
+  constructor(@Inject(CACHE_MANAGER) private throttledProxies: Cache) {}
 
   public setProxies(proxies: Proxy[]) {
     if (proxies.length === 0) return;
@@ -31,9 +33,8 @@ export class ProxiesService {
   }
 
   public throttleProxy(proxy: Proxy | string, timeoutMs?: number) {
-    const options: CacheSetOptions = {};
-    if (timeoutMs) options.ttl = timeoutMs;
-    this.throttledProxies.set(proxy.toString(), true, options);
+    const proxyId = this.getProxyId(proxy);
+    this.throttledProxies.set(proxyId, true, timeoutMs);
   }
 
   private async fetchProxy() {
@@ -55,10 +56,15 @@ export class ProxiesService {
 
   private findAvailableProxy(): Proxy | null {
     for (const proxy of this.proxies.values()) {
-      if (this.throttledProxies.has(proxy.toString())) continue;
+      const proxyId = this.getProxyId(proxy);
+      if (this.throttledProxies.get(proxyId)) continue;
       return proxy;
     }
 
     return null;
+  }
+
+  private getProxyId(proxy: Proxy | string) {
+    return `${ProxiesService.name}:${proxy.toString()}`;
   }
 }

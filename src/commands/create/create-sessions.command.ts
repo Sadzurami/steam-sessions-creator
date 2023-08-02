@@ -1,6 +1,8 @@
 import glob from 'fast-glob';
 import { CliUtilityService, Command, CommandRunner, Help, Option } from 'nest-commander';
+import pQueue from 'p-queue';
 import path from 'path';
+import { setTimeout as delay } from 'timers/promises';
 
 import { Logger } from '@nestjs/common';
 
@@ -47,18 +49,7 @@ export class CreateSessionsCommand extends CommandRunner {
 
       const secretsOptionInput = await this.normalizeInput(options.secrets);
       const secrets = await this.secretsImportService.loadSecrets(secretsOptionInput);
-      this.createSessionsService.assignSecretsToAccounts(accounts, secrets);
       this.logger.log(`Secrets: ${secrets.length}`);
-
-      const proxiesOptionInput = await this.normalizeInput(options.proxies);
-      const proxies = await this.proxiesImportService.loadProxies(proxiesOptionInput);
-      this.proxiesService.setProxies(proxies);
-      this.logger.log(`Proxies: ${proxies.length}`);
-
-      const concurrencyOptionInput = options.concurrency;
-      const concurrency = proxies.length > 0 ? concurrencyOptionInput || Math.min(proxies.length * 3, 100) : 1;
-      this.createSessionsService.setConcurrency(concurrency);
-      this.logger.log(`Concurrency: ${concurrency}`);
 
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
@@ -74,9 +65,50 @@ export class CreateSessionsCommand extends CommandRunner {
         accounts = accounts.filter((account) => !existingSessions.some((a) => a.username === account.username));
       }
 
-      this.logger.log(`Creating sessions: ${accounts.length}`);
+      if (accounts.length === 0) {
+        this.logger.log('No accounts to create');
+        return;
+      }
 
-      await this.createSessionsService.createAndExportSessions(accounts);
+      const proxiesOptionInput = await this.normalizeInput(options.proxies);
+      const proxies = await this.proxiesImportService.loadProxies(proxiesOptionInput);
+      this.proxiesService.setProxies(proxies);
+      this.logger.log(`Proxies: ${proxies.length}`);
+
+      const concurrencyOptionInput = options.concurrency;
+      const concurrency = proxies.length > 0 ? concurrencyOptionInput || Math.min(proxies.length * 3, 100) : 1;
+      this.logger.log(`Concurrency: ${concurrency}`);
+
+      this.logger.log(`Starting to create sessions for ${accounts.length} accounts`);
+
+      this.accountsImportService.assignSecretsToAccounts(accounts, secrets);
+
+      let success = 0;
+      let fails = 0;
+      let left = accounts.length;
+
+      const queue = new pQueue({ concurrency, interval: 10, intervalCap: 1 });
+      for (const account of accounts) {
+        queue.add(async () => {
+          try {
+            const session = await this.createSessionsService.createSession(account);
+            await this.exportSessionsService.exportSession(session);
+            success++;
+            this.logger.log(`Success: ${account.username}, left: ${--left}`);
+          } catch (error) {
+            fails++;
+            this.logger.warn(`Fail: ${account.username}, left: ${--left}`);
+          }
+        });
+      }
+
+      await queue.onIdle();
+
+      this.logger.log(`Session creation complete`);
+      this.logger.log(`Success: ${success}`);
+      this.logger.log(`Fails: ${fails}`);
+
+      await delay(1000);
     } catch (error) {
       this.logger.error(error.message);
     }

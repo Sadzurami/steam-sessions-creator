@@ -1,3 +1,4 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
@@ -8,7 +9,12 @@ import { LoggerModule } from './modules/logger/logger.module';
 
 @Global()
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, load: [configuration] }), LoggerModule, CommandsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
+    LoggerModule,
+    CacheModule.register(),
+    CommandsModule,
+  ],
   providers: [AppService],
   exports: [AppService],
 })
