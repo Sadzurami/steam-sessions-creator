@@ -13,11 +13,11 @@ Typically, steam session contains:
   "Username": "...",
   "Password": "...",
   "SteamId": "...",
+  "SharedSecret": "...",
+  "IdentitySecret": "...",
   "WebRefreshToken": "...",
   "MobileRefreshToken": "...",
   "DesktopRefreshToken": "...",
-  "SharedSecret": "...",
-  "IdentitySecret": "...",
   "SchemaVersion": 2
 }
 ```
@@ -25,11 +25,11 @@ Typically, steam session contains:
 - `Username` - steam username
 - `Password` - steam password
 - `SteamId` - steam id of account
+- `SharedSecret` - shared secret to generate 2fa codes (or null if 2fa disabled)
+- `IdentitySecret` - identity secret to generate 2fa codes (or null if 2fa disabled)
 - `WebRefreshToken` - refresh token for login via web
 - `MobileRefreshToken` - refresh token for login via mobile app
 - `DesktopRefreshToken` - refresh token for login via steam client
-- `SharedSecret` - shared secret to generate 2fa codes (or null if 2fa disabled)
-- `IdentitySecret` - identity secret to generate 2fa codes (or null if 2fa disabled)
 - `SchemaVersion` - schema version of steam session
 
 ## Features
