@@ -55,7 +55,7 @@ export class CreateSessionsCommand extends CommandRunner {
       this.logger.log(`Proxies: ${proxies.length}`);
 
       const concurrencyOptionInput = options.concurrency;
-      const concurrency = proxies.length > 0 ? concurrencyOptionInput || proxies.length * 3 : 1;
+      const concurrency = proxies.length > 0 ? concurrencyOptionInput || Math.min(proxies.length * 3, 100) : 1;
       this.createSessionsService.setConcurrency(concurrency);
       this.logger.log(`Concurrency: ${concurrency}`);
 
