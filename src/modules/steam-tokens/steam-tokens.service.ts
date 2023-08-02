@@ -10,7 +10,7 @@ import { ProxiesService } from '../proxies/proxies.service';
 
 @Injectable()
 export class SteamTokensService {
-  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 35 * 1000 });
+  private readonly throttledConnections = new Cache<string, boolean>({ ttl: 31 * 1000 });
 
   constructor(private readonly proxiesService: ProxiesService) {}
 
@@ -44,7 +44,7 @@ export class SteamTokensService {
 
       return refreshToken;
     } catch (error) {
-      if (error.eresult === EResult.RateLimitExceeded) this.throttleConnection(connectionId, 35 * 60 * 1000);
+      if (error.eresult === EResult.RateLimitExceeded) this.throttleConnection(connectionId, 31 * 60 * 1000);
       throw new Error('Failed to create refresh token', { cause: error });
     } finally {
       if (loginSession) loginSession.cancelLoginAttempt();
