@@ -1,5 +1,5 @@
 import glob from 'fast-glob';
-import { CliUtilityService, Command, CommandRunner, Help, Option } from 'nest-commander';
+import { Command, CommandRunner, Help, Option } from 'nest-commander';
 import path from 'path';
 
 import { Logger } from '@nestjs/common';
@@ -62,7 +62,7 @@ export class CreateSessionsCommand extends CommandRunner {
       const outputOptionInput = options.output;
       if (!outputOptionInput) throw new Error('Output path is required');
       const output = path.resolve(outputOptionInput);
-      await this.exportSessionsService.setOutputPath(output);
+      await this.exportSessionsService.setOutputPath(path.resolve(outputOptionInput));
       this.logger.log(`Output: ${output}`);
 
       await this.createSessionsService.createAndExportSessions(accounts);
@@ -154,15 +154,6 @@ Default: 1, or the number of proxies.`,
     if (Number.isNaN(parsed)) throw new Error('Concurrency must be a number');
     if (parsed < 1) throw new Error('Concurrency must be greater than 0');
     return parsed;
-  }
-
-  @Option({
-    flags: '--ignore-created',
-    description: 'Ignore already created sessions which are found in the output directory.',
-    defaultValue: true,
-  })
-  private parseIgnoreCreatedOption(val: string) {
-    return new CliUtilityService().parseBoolean(val);
   }
 
   @Option({
