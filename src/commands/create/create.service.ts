@@ -53,7 +53,7 @@ export class CreateService {
       left: this.accounts.getCount(),
     };
 
-    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1 });
+    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 10, intervalCap: 1 });
 
     for (const account of accounts) {
       if (sessions.some((session) => session.Username === account.username)) {

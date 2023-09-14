@@ -42,7 +42,11 @@ export class RenewService {
       left: this.sessions.getCount(),
     };
 
-    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1 });
+    const queue = new pQueue({
+      concurrency: this.proxies.getCount() || 1,
+      interval: 10,
+      intervalCap: 1,
+    });
 
     for (const session of sessions) {
       if (this.sessions.validateOne(session)) {
@@ -55,26 +59,26 @@ export class RenewService {
           this.logger.verbose(`Skipping renewing session for ${session.Username}`);
           continue;
         }
-
-        queue
-          .add(() =>
-            this.sessions
-              .create(this.sessions.convertToAccount(session))
-              .then((session) => this.sessions.exportOne(session, path.resolve(options.sessions))),
-          )
-          .then(() => {
-            payload.renewed++;
-            this.logger.verbose(`Session for ${session.Username} successfully renewed`);
-          })
-          .catch(() => {
-            payload.failed++;
-            this.logger.verbose(`Failed to renew session for ${session.Username}`);
-          })
-          .finally(() => {
-            payload.left--;
-          })
-          .then(() => delay(31 * 1000));
       }
+
+      queue
+        .add(() =>
+          this.sessions
+            .create(this.sessions.convertToAccount(session))
+            .then((session) => this.sessions.exportOne(session, path.resolve(options.sessions))),
+        )
+        .then(() => {
+          payload.renewed++;
+          this.logger.verbose(`Session for ${session.Username} successfully renewed`);
+        })
+        .catch(() => {
+          payload.failed++;
+          this.logger.verbose(`Failed to renew session for ${session.Username}`);
+        })
+        .finally(() => {
+          payload.left--;
+        })
+        .then(() => delay(31 * 1000));
     }
 
     return payload;
