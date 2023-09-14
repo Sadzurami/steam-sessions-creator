@@ -31,11 +31,11 @@ export class CreateCommand extends CommandRunner {
 
       const progress = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
 
-      const progressBarSize = Math.floor(header.length / 2);
+      const progressBarSize = 30;
       const progressBar = `${'█'.repeat(Math.round((progress / 100) * progressBarSize))}`;
       const progressBarEmpty = `${'░'.repeat(progressBarSize - Math.round((progress / 100) * progressBarSize))}`;
 
-      const body = `${chalk.green(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)}%`;
+      const body = `${chalk.greenBright(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)} %`;
 
       const footer = `Created: ${chalk.cyanBright(payload.created)}, Failed: ${chalk.cyanBright(
         payload.failed,
