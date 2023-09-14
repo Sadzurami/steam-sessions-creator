@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "nest build",
-    "build:package": "pnpm run build && pnpm pkg dist/main.js --target node18 --output ssc --config package.json --compress GZip",
+    "build:package": "yarn run build && yarn pkg dist/main.js --target node18 --output ssc --config package.json --compress GZip",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
