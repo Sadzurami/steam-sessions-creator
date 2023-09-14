@@ -24,10 +24,6 @@ export class RenewCommand extends CommandRunner {
   async run(args: string[], options: RenewOptions) {
     const payload = await this.renewService.run(options);
 
-    const uiUpdateIntervalMs = 120;
-    const uiSpinnerFrames = ['◡', '⊙', '◠'];
-    let uiFrameIndex = 0;
-
     const createUi = () => {
       const header = `Sessions: ${chalk.cyanBright(payload.sessions)}, Proxies: ${chalk.cyanBright(payload.proxies)}`;
 
@@ -37,8 +33,7 @@ export class RenewCommand extends CommandRunner {
       const progressBar = `${'█'.repeat(Math.round((progress / 100) * progressBarSize))}`;
       const progressBarEmpty = `${'░'.repeat(progressBarSize - Math.round((progress / 100) * progressBarSize))}`;
 
-      const spinner = uiSpinnerFrames[uiFrameIndex++ % uiSpinnerFrames.length];
-      const body = `${chalk.green(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)}% ${spinner}`;
+      const body = `${chalk.green(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)}%`;
 
       const footer = `Renewed: ${chalk.cyanBright(payload.renewed)}, Skipped: ${chalk.cyanBright(
         payload.skipped,
@@ -50,7 +45,7 @@ export class RenewCommand extends CommandRunner {
     setInterval(() => {
       logUpdate(createUi());
       if (payload.left === 0) this.app.shutdown();
-    }, uiUpdateIntervalMs);
+    }, 1000);
   }
 
   @Option({
