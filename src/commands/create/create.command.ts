@@ -24,6 +24,9 @@ export class CreateCommand extends CommandRunner {
   async run(args: string[], options: CreateOptions) {
     const payload = await this.createService.run(options);
 
+    let frameIndex = 0;
+    const spinnerFrames = ['-', '\\', '|', '/'];
+
     const createUi = () => {
       const header = `Accounts: ${chalk.cyanBright(payload.accounts)}, Secrets: ${chalk.cyanBright(
         payload.secrets,
@@ -34,8 +37,9 @@ export class CreateCommand extends CommandRunner {
       const progressBarSize = 30;
       const progressBar = `${'█'.repeat(Math.round((progress / 100) * progressBarSize))}`;
       const progressBarEmpty = `${'░'.repeat(progressBarSize - Math.round((progress / 100) * progressBarSize))}`;
+      const spinner = spinnerFrames[(frameIndex = ++frameIndex % spinnerFrames.length)];
 
-      const body = `${chalk.greenBright(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)} %`;
+      const body = `${spinner} ${chalk.greenBright(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)} %`;
 
       const footer = `Created: ${chalk.cyanBright(payload.created)}, Failed: ${chalk.cyanBright(
         payload.failed,
@@ -47,7 +51,7 @@ export class CreateCommand extends CommandRunner {
     setInterval(() => {
       logUpdate(createUi());
       if (payload.left === 0) this.app.shutdown();
-    }, 1000);
+    }, 100);
   }
 
   @Option({
