@@ -12,12 +12,16 @@ Typically, steam session contains:
 {
   "Username": "...",
   "Password": "...",
-  "SteamId": "...",
+
   "SharedSecret": "...",
   "IdentitySecret": "...",
+
+  "SteamId": "...",
+
   "WebRefreshToken": "...",
   "MobileRefreshToken": "...",
   "DesktopRefreshToken": "...",
+
   "SchemaVersion": 2
 }
 ```
@@ -32,110 +36,81 @@ Typically, steam session contains:
 - `DesktopRefreshToken` - refresh token for login via steam client
 - `SchemaVersion` - schema version of steam session
 
-## Features
-
-- Import accounts from file, [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) or previously created steam sessions
-- Proxies support out of the box (http, https, socks5)
-- Steam Guard support from maFiles, [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) or previously created steam sessions
-
 ## Installation
 
 Download latest release from [here](https://github.com/Sadzurami/steam-sessions-creator/releases)
 
 ## Commands
 
-### `create`
+### `create` (default)
 
-Allows you to create steam session from scratch.
+Create new sessions.
 
-### Options
+Flags:
 
-> --accounts (-a) [required]
+> -a --accounts
 
-Specify one or more accounts.
-Account can be specified as:
-
-- A simple string.
-- A file path to load accounts from (one account per line).
-- A glob pattern to load accounts from multiple files.
-
+Specify file path where accounts are stored.
 Supported formats:
 
 - username:password
 - username:password:sharedSecret
-- username:password:sharedSecret:identitySecret
-- .json (asf) files
-- .steamsession (steam sessions creator) files
 
-> --secrets (-s)
+Default: `./accounts.txt`
 
-Specify one or more secrets.
+> -s, --secrets
 
-Secret can be specified as:
-
-- A file path to load secrets from file.
-- A glob pattern to load secrets from multiple files.
-
+Specify file path where secrets are stored.
 Supported formats:
 
 - maFile
-- ASF db
 
-Default: no secrets
+Default: `./secrets`
 
-> --proxies (-p)
+> -p, --proxies
 
-Specify one or more proxies.
+Specify file path where proxies are stored.
+Supported formats: proto://user:pass@host:port
 
-Proxy can be specified as:
+Default: `./proxies.txt`
 
-- A string in the format `<protocol>://<username>:<password>@<host>:<port>`
-- A file path to load proxies from a text file.
+> -o, --output
 
-Supported protocols:
-
-- http
-- https
-
-Default: no proxies
-
-> --concurrency (-c)
-
-Specify the number of concurrent runs.
-
-Default: 1, or the number of proxies.
-
-> --output (-o)
-
-Specify the output directory.
+Specify directory path where sessions will be stored.
 
 Default: `./sessions`
 
-> --overwrite (-w)
+> -f, --force
 
-Overwrite existing sessions.
-
-Default: false
+Force creation even if session already exists in output directory.
 
 > --help (-h)
 
-Show help message and exit.
+Show help message.
 
-### `validate`
+### `renew`
 
-Allows you to validate steam session and get expiration date.
+Renew sessions.
 
-### Options
+Flags:
 
-> --sessions (-s) [required]
+> -s, --sessions
 
-Specify one or more sessions.
+Specify directory path where sessions are stored.
 
-Session can be specified as:
+Default: `./sessions`
 
-- A file path to load session from.
-- A glob pattern to load sessions from multiple files.
+> -p, --proxies
 
-# Questions And Suggestions
+Specify file path where proxies are stored.
+Supported formats: proto://user:pass@host:port
+
+Default: `./proxies.txt`
+
+> -f, --force
+
+Force renew, even if session is valid and not expired yet.
+
+## Questions And Suggestions
 
 If you have any suggestions, please contact me via email [mail.to.sadzurami@gmail.com](mailto:mail.to.sadzurami@gmail.com).

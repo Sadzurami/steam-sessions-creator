@@ -1,70 +1,65 @@
-import { Cache } from 'cache-manager';
-import pQueue from 'p-queue';
+import fs from 'fs/promises';
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
-
-import { Proxy } from '../../interfaces/proxy.interface';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class ProxiesService {
-  private readonly proxies: Map<string, Proxy> = new Map();
-  private readonly proxiesUsageQueue = new pQueue({ concurrency: 1 });
+  private readonly logger = new Logger(ProxiesService.name);
 
-  constructor(@Inject(CACHE_MANAGER) private throttledProxies: Cache) {}
+  private readonly proxies: string[] = [];
+  private index = 0;
 
-  public setProxies(proxies: Proxy[]) {
-    if (proxies.length === 0) return;
+  constructor() {}
 
-    for (const proxy of proxies) {
-      this.proxies.set(proxy.toString(), proxy);
-    }
-  }
+  public getOne(): string | null {
+    if (this.proxies.length === 0) return null;
 
-  public async getProxy(): Promise<Proxy | null> {
-    if (this.proxies.size === 0) return null;
-    const proxy = await this.proxiesUsageQueue.add(() => this.fetchProxy());
-    this.throttleProxy(proxy);
-    return proxy;
-  }
-
-  public getProxiesCount() {
-    return this.proxies.size;
-  }
-
-  public throttleProxy(proxy: Proxy | string, timeoutMs?: number) {
-    const proxyId = this.getProxyId(proxy);
-    this.throttledProxies.set(proxyId, true, timeoutMs);
-  }
-
-  private async fetchProxy() {
-    const proxy = await new Promise<Proxy>((resolve) => {
-      let proxy = this.findAvailableProxy();
-      if (proxy) return resolve(proxy);
-
-      const interval = setInterval(() => {
-        proxy = this.findAvailableProxy();
-        if (!proxy) return;
-
-        clearInterval(interval);
-        resolve(proxy);
-      }, 1000);
-    });
+    const proxy = this.proxies[this.index];
+    this.index = (this.index + 1) % this.proxies.length;
 
     return proxy;
   }
 
-  private findAvailableProxy(): Proxy | null {
-    for (const proxy of this.proxies.values()) {
-      const proxyId = this.getProxyId(proxy);
-      if (this.throttledProxies.get(proxyId)) continue;
-      return proxy;
-    }
-
-    return null;
+  public getCount() {
+    return this.proxies.length;
   }
 
-  private getProxyId(proxy: Proxy | string) {
-    return `${ProxiesService.name}:${proxy.toString()}`;
+  public async importAll(filePath: string) {
+    if (!filePath) return;
+
+    try {
+      await fs.access(filePath, fs.constants.F_OK | fs.constants.R_OK);
+    } catch (error) {
+      this.logger.verbose(`File ${filePath} does not exist or is not readable`);
+      return;
+    }
+
+    let fileContent: string;
+    try {
+      fileContent = await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      this.logger.debug(new Error(`Failed to read file ${filePath}`), { cause: error });
+      return;
+    }
+
+    const lines = fileContent.split(/\s+|\r?\n/).map((line) => line.trim());
+    if (lines.length === 0) return;
+
+    const proxies: string[] = [];
+
+    let lineIndex = 0;
+    for (const line of lines) {
+      lineIndex++;
+
+      try {
+        const proxy = new URL(line).toString().replace(/\/$/, '');
+        if (!proxies.includes(proxy)) proxies.push(proxy);
+      } catch (error) {
+        this.logger.debug(new Error(`Invalid proxy at line ${lineIndex}`, { cause: error }));
+      }
+    }
+
+    this.proxies.push(...proxies);
+    this.logger.verbose(`Imported ${proxies.length} proxies from file ${filePath}`);
   }
 }

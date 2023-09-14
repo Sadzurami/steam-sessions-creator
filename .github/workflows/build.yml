@@ -18,19 +18,19 @@ jobs:
           node-version: '18'
 
       - uses: actions/cache@v3
-        id: yarn-cache
+        id: pnpm-cache
         with:
           path: |
             **/node_modules
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            ${{ steps.pnpm-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-pnpm-
       - name: Install Dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Build Package
-        run: yarn build:package
+        run: pnpm build:package
 
       - name: Upload Package
         uses: actions/upload-artifact@v3
@@ -49,19 +49,19 @@ jobs:
           node-version: '18'
 
       - uses: actions/cache@v3
-        id: yarn-cache
+        id: pnpm-cache
         with:
           path: |
             **/node_modules
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            ${{ steps.pnpm-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-pnpm-
       - name: Install Dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Build Package
-        run: yarn build:package
+        run: pnpm build:package
 
       - name: Upload Package
         uses: actions/upload-artifact@v3
@@ -80,19 +80,19 @@ jobs:
           node-version: '18'
 
       - uses: actions/cache@v3
-        id: yarn-cache
+        id: pnpm-cache
         with:
           path: |
             **/node_modules
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            ${{ steps.pnpm-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-pnpm-
       - name: Install Dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Build Package
-        run: yarn build:package
+        run: pnpm build:package
 
       - name: Upload Package
         uses: actions/upload-artifact@v3

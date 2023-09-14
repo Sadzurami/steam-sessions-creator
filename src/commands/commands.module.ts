@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { CreateModule } from './create/create-sessions.module';
-import { ValidateSessionsModule } from './validate/validate-sessions.module';
+import { CreateModule } from './create/create.module';
+import { RenewModule } from './renew/renew.module';
 
 @Module({
-  imports: [CreateModule, ValidateSessionsModule],
+  imports: [CreateModule, RenewModule],
 })
 export class CommandsModule {}
