@@ -166,7 +166,7 @@ export class SessionsService {
     this.logger.verbose(`File ${filePath} successfully exported`);
   }
 
-  public async validateOne(session: Session) {
+  public validateOne(session: Session) {
     const requiredFields = [
       'Username',
       'Password',
