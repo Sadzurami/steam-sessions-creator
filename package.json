@@ -32,7 +32,6 @@
     "@nestjs/config": "^3.1.0",
     "@nestjs/core": "^10.2.5",
     "chalk": "^4",
-    "cli-progress": "^3.12.0",
     "log-update": "^4.0.0",
     "nest-commander": "^3.12.0",
     "nestjs-pino": "^3.4.0",
