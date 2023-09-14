@@ -19,7 +19,10 @@ export class RenewService {
   ) {}
 
   public async run(options: RenewOptions) {
-    const outputExists = await fs.stat(path.resolve(options.sessions)).catch(() => false);
+    const outputExists = await fs
+      .access(path.resolve(options.sessions))
+      .then(() => true)
+      .catch(() => false);
     if (!outputExists) await fs.mkdir(path.resolve(options.sessions), { recursive: true });
 
     if (options.sessions) await this.sessions.importAll(path.resolve(options.sessions));

@@ -27,7 +27,10 @@ export class CreateService {
     if (options.secrets) await this.secrets.importAll(path.resolve(options.secrets));
     if (options.proxies) await this.proxies.importAll(path.resolve(options.proxies));
 
-    const outputExists = await fs.stat(path.resolve(options.output)).catch(() => false);
+    const outputExists = await fs
+      .access(path.resolve(options.output))
+      .then(() => true)
+      .catch(() => false);
     if (!outputExists) await fs.mkdir(path.resolve(options.output), { recursive: true });
 
     await this.sessions.importAll(path.resolve(options.output));
