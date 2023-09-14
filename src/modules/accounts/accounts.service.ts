@@ -22,7 +22,7 @@ export class AccountsService {
     if (!filePath) return;
 
     try {
-      fs.access(filePath, fs.constants.F_OK | fs.constants.R_OK);
+      await fs.access(filePath, fs.constants.F_OK | fs.constants.R_OK);
     } catch (error) {
       this.logger.verbose(`File ${filePath} does not exist or is not readable`);
       return;
