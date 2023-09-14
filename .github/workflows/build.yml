@@ -12,36 +12,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 7
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          node-version: '18'
 
       - uses: actions/cache@v3
-        name: Setup pnpm cache
+        id: yarn-cache
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: |
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
+            ${{ runner.os }}-yarn-
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Build
-        run: pnpm build:package
+        run: yarn build:package
 
       - name: Upload
         uses: actions/upload-artifact@v3
@@ -54,36 +43,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 7
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          node-version: '18'
 
       - uses: actions/cache@v3
-        name: Setup pnpm cache
+        id: yarn-cache
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: |
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
+            ${{ runner.os }}-yarn-
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Build
-        run: pnpm build:package
+        run: yarn build:package
 
       - name: Upload
         uses: actions/upload-artifact@v3
@@ -96,36 +74,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 7
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          node-version: '18'
 
       - uses: actions/cache@v3
-        name: Setup pnpm cache
+        id: yarn-cache
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: |
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
+            ${{ runner.os }}-yarn-
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Build
-        run: pnpm build:package
+        run: yarn build:package
 
       - name: Upload
         uses: actions/upload-artifact@v3
