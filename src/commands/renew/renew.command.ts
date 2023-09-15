@@ -10,7 +10,7 @@ import { RenewService } from './renew.service';
 
 @Command({
   name: 'renew',
-  description: 'Renew sessions.',
+  description: 'Renew sessions',
   options: {},
 })
 export class RenewCommand extends CommandRunner {
@@ -57,7 +57,7 @@ export class RenewCommand extends CommandRunner {
 
   @Option({
     flags: '-s, --sessions <sessions>',
-    description: 'Specify directory path where sessions are stored.',
+    description: 'specify directory path where sessions are stored',
     defaultValue: './sessions',
   })
   parseSessionsOption(value: string) {
@@ -72,7 +72,7 @@ export class RenewCommand extends CommandRunner {
 
   @Option({
     flags: '-p, --proxies <proxies>',
-    description: 'Specify file path where proxies are stored.',
+    description: 'specify file path where proxies are stored',
     defaultValue: './proxies.txt',
   })
   parseProxiesOption(value: string) {
@@ -85,7 +85,7 @@ export class RenewCommand extends CommandRunner {
 
   @Option({
     flags: '-f, --force',
-    description: 'Force renew, even if session is valid and not expired.',
+    description: 'force renew, even if session is valid and not expired',
   })
   parseForceOption(value: any) {
     return value;

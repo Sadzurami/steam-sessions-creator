@@ -10,7 +10,7 @@ import { CreateService } from './create.service';
 
 @Command({
   name: 'create',
-  description: 'Create new sessions.',
+  description: 'Create new sessions',
   options: { isDefault: true },
 })
 export class CreateCommand extends CommandRunner {
@@ -56,7 +56,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-a, --accounts <accounts>',
-    description: 'Specify file path where accounts are stored.',
+    description: 'specify file path where accounts are stored',
     defaultValue: './accounts.txt',
   })
   parseAccountsOption(value: string) {
@@ -69,7 +69,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-s, --secrets <secrets>',
-    description: 'Specify file path where secrets are stored.',
+    description: 'specify file path where secrets are stored',
     defaultValue: './secrets',
   })
   parseSecretsOption(value: string) {
@@ -82,7 +82,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-p, --proxies <proxies>',
-    description: 'Specify file path where proxies are stored.',
+    description: 'specify file path where proxies are stored',
     defaultValue: './proxies.txt',
   })
   parseProxiesOption(value: string) {
@@ -95,7 +95,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-o, --output <output>',
-    description: 'Specify directory path where sessions will be stored.',
+    description: 'specify directory path where sessions will be stored',
     defaultValue: './sessions',
   })
   parseOutputOption(value: string) {
@@ -110,7 +110,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-f, --force',
-    description: 'Force creation, even if session already exists.',
+    description: 'force creation, even if session already exists',
   })
   parseForceOption(value: boolean) {
     return value;

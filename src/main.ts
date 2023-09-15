@@ -7,7 +7,7 @@ import { AppService } from './app.service';
 bootstrap();
 
 async function bootstrap() {
-  const app = await CommandFactory.createWithoutRunning(AppModule);
+  const app = await CommandFactory.createWithoutRunning(AppModule, { bufferLogs: true });
   app.enableShutdownHooks();
 
   const logger = app.get(Logger);
