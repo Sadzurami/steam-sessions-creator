@@ -27,30 +27,30 @@ export class CreateCommand extends CommandRunner {
     let frameIndex = 0;
     const spinnerFrames = ['-', '\\', '|', '/'];
 
-    const createUi = () => {
-      const header = `Accounts: ${chalk.cyanBright(payload.accounts)}, Secrets: ${chalk.cyanBright(
-        payload.secrets,
-      )}, Proxies: ${chalk.cyanBright(payload.proxies)}`;
-
-      const progress = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
-
-      const progressBarSize = 30;
-      const progressBar = `${'█'.repeat(Math.round((progress / 100) * progressBarSize))}`;
-      const progressBarEmpty = `${'░'.repeat(progressBarSize - Math.round((progress / 100) * progressBarSize))}`;
+    const interval = setInterval(() => {
+      // use spinner to indicate that app is still running
       const spinner = spinnerFrames[(frameIndex = ++frameIndex % spinnerFrames.length)];
 
-      const body = `${spinner} ${chalk.greenBright(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)} %`;
+      const resoursesString = `Accounts: ${chalk.cyanBright(payload.accounts)}, Secrets: ${chalk.cyanBright(
+        payload.secrets,
+      )}, Proxies: ${chalk.cyanBright(payload.proxies)} ${spinner}`;
 
-      const footer = `Created: ${chalk.cyanBright(payload.created)}, Failed: ${chalk.cyanBright(
+      const progressValue = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
+      const barSize = 30;
+      const barFill = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
+      const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
+      const progressString = `${chalk.greenBright(barFill + barEmpty)} ${chalk.cyanBright(progressValue)} %`;
+
+      const resultsString = `Created: ${chalk.cyanBright(payload.created)}, Failed: ${chalk.cyanBright(
         payload.failed,
       )}, Left: ${chalk.cyanBright(payload.left)}`;
 
-      return `${header}\n\n${body}\n\n${footer}`;
-    };
+      logUpdate(`${resoursesString}\n\n${progressString}\n\n${resultsString}`);
 
-    setInterval(() => {
-      logUpdate(createUi());
-      if (payload.left === 0) this.app.shutdown();
+      if (payload.left === 0) {
+        clearInterval(interval);
+        this.app.shutdown();
+      }
     }, 100);
   }
 

@@ -1,11 +1,12 @@
-import fs from 'fs/promises';
 import pQueue from 'p-queue';
 import path from 'path';
 import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
+import { Account } from '../../modules/accounts/account.interface';
 import { ProxiesService } from '../../modules/proxies/proxies.service';
+import { Session } from '../../modules/sessions/session.interface';
 import { SessionsService } from '../../modules/sessions/sessions.service';
 import { RenewOptions } from './renew.options.interface';
 
@@ -19,12 +20,6 @@ export class RenewService {
   ) {}
 
   public async run(options: RenewOptions) {
-    const outputExists = await fs
-      .access(path.resolve(options.sessions))
-      .then(() => true)
-      .catch(() => false);
-    if (!outputExists) await fs.mkdir(path.resolve(options.sessions), { recursive: true });
-
     if (options.sessions) await this.sessions.importAll(path.resolve(options.sessions));
     if (options.proxies) await this.proxies.importAll(path.resolve(options.proxies));
 
@@ -63,7 +58,7 @@ export class RenewService {
 
       queue.add(() =>
         this.sessions
-          .create(this.sessions.convertToAccount(session))
+          .create(this.convertSessionToAccount(session))
           .then((session) => this.sessions.exportOne(session, path.resolve(options.sessions)))
           .then(() => {
             payload.renewed++;
@@ -81,5 +76,14 @@ export class RenewService {
     }
 
     return payload;
+  }
+
+  private convertSessionToAccount(session: Session): Account {
+    return {
+      username: session.Username,
+      password: session.Password,
+      sharedSecret: session.SharedSecret,
+      identitySecret: session.IdentitySecret,
+    };
   }
 }

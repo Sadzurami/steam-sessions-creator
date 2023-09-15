@@ -27,28 +27,33 @@ export class RenewCommand extends CommandRunner {
     let frameIndex = 0;
     const spinnerFrames = ['-', '\\', '|', '/'];
 
-    const createUi = () => {
-      const header = `Sessions: ${chalk.cyanBright(payload.sessions)}, Proxies: ${chalk.cyanBright(payload.proxies)}`;
-
-      const progress = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
-
-      const progressBarSize = 30;
-      const progressBar = `${'█'.repeat(Math.round((progress / 100) * progressBarSize))}`;
-      const progressBarEmpty = `${'░'.repeat(progressBarSize - Math.round((progress / 100) * progressBarSize))}`;
+    const interval = setInterval(() => {
+      // use spinner to indicate that app is still running
       const spinner = spinnerFrames[(frameIndex = ++frameIndex % spinnerFrames.length)];
 
-      const body = `${spinner} ${chalk.greenBright(progressBar + progressBarEmpty)} ${chalk.cyanBright(progress)} %`;
+      const resoursesString = `Sessions: ${chalk.cyanBright(payload.sessions)}, Proxies: ${chalk.cyanBright(
+        payload.proxies,
+      )} ${spinner}`;
 
-      const footer = `Renewed: ${chalk.cyanBright(payload.renewed)}, Skipped: ${chalk.cyanBright(
+      const progressValue = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
+      const barSize = 30;
+      const progressBar = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
+      const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
+
+      const progressString = `${spinner} ${chalk.greenBright(progressBar + barEmpty)} ${chalk.cyanBright(
+        progressValue,
+      )} %`;
+
+      const resultsString = `Renewed: ${chalk.cyanBright(payload.renewed)}, Skipped: ${chalk.cyanBright(
         payload.skipped,
       )}, Failed: ${chalk.cyanBright(payload.failed)}, Left: ${chalk.cyanBright(payload.left)}`;
 
-      return `${header}\n\n${body}\n\n${footer}`;
-    };
+      logUpdate(`${resoursesString}\n\n${progressString}\n\n${resultsString}`);
 
-    setInterval(() => {
-      logUpdate(createUi());
-      if (payload.left === 0) this.app.shutdown();
+      if (payload.left === 0) {
+        clearInterval(interval);
+        this.app.shutdown();
+      }
     }, 100);
   }
 

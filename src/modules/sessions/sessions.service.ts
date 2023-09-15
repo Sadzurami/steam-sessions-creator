@@ -196,13 +196,4 @@ export class SessionsService {
 
     return true;
   }
-
-  public convertToAccount(session: Session): Account {
-    return {
-      username: session.Username,
-      password: session.Password,
-      sharedSecret: session.SharedSecret,
-      identitySecret: session.IdentitySecret,
-    };
-  }
 }
