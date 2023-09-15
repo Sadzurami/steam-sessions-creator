@@ -40,9 +40,7 @@ export class RenewCommand extends CommandRunner {
       const progressBar = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
       const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
 
-      const progressString = `${spinner} ${chalk.greenBright(progressBar + barEmpty)} ${chalk.cyanBright(
-        progressValue,
-      )} %`;
+      const progressString = `${chalk.greenBright(progressBar + barEmpty)} ${chalk.cyanBright(progressValue)} %`;
 
       const resultsString = `Renewed: ${chalk.cyanBright(payload.renewed)}, Skipped: ${chalk.cyanBright(
         payload.skipped,
