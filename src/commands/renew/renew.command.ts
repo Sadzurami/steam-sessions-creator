@@ -72,8 +72,7 @@ export class RenewCommand extends CommandRunner {
 
   @Option({
     flags: '-p, --proxies <proxies>',
-    description: `Specify file path where proxies are stored.
-Supported formats: proto://user:pass@host:port`,
+    description: 'Specify file path where proxies are stored.',
     defaultValue: './proxies.txt',
   })
   parseProxiesOption(value: string) {
@@ -86,7 +85,7 @@ Supported formats: proto://user:pass@host:port`,
 
   @Option({
     flags: '-f, --force',
-    description: 'Force renew, even if session is valid and not expired yet.',
+    description: 'Force renew, even if session is valid and not expired.',
   })
   parseForceOption(value: any) {
     return value;

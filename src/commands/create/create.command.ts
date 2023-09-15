@@ -56,10 +56,7 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-a, --accounts <accounts>',
-    description: `Specify file path where accounts are stored.
-Supported formats:
-- username:password
-- username:password:sharedSecret`,
+    description: 'Specify file path where accounts are stored.',
     defaultValue: './accounts.txt',
   })
   parseAccountsOption(value: string) {
@@ -72,9 +69,7 @@ Supported formats:
 
   @Option({
     flags: '-s, --secrets <secrets>',
-    description: `Specify file path where secrets are stored.
-Supported formats:
-- maFile`,
+    description: 'Specify file path where secrets are stored.',
     defaultValue: './secrets',
   })
   parseSecretsOption(value: string) {
@@ -87,8 +82,7 @@ Supported formats:
 
   @Option({
     flags: '-p, --proxies <proxies>',
-    description: `Specify file path where proxies are stored.
-Supported formats: proto://user:pass@host:port`,
+    description: 'Specify file path where proxies are stored.',
     defaultValue: './proxies.txt',
   })
   parseProxiesOption(value: string) {
@@ -116,7 +110,7 @@ Supported formats: proto://user:pass@host:port`,
 
   @Option({
     flags: '-f, --force',
-    description: 'Force creation even if session already exists in output directory.',
+    description: 'Force creation, even if session already exists.',
   })
   parseForceOption(value: boolean) {
     return value;
