@@ -95,6 +95,8 @@ export class SessionsService {
       return;
     }
 
+    files = files.filter((file) => file.endsWith('.steamsession'));
+
     for (const file of files) queue.add(() => this.importOne(`${directoryPath}/${file}`));
 
     await queue.onIdle();
