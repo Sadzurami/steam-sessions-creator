@@ -50,6 +50,7 @@ export class AccountsService {
       const username = parts[0];
       const password = parts[1];
       let sharedSecret = parts[2];
+      let identitySecret = parts[3];
 
       if (!username || !password) {
         this.logger.verbose(`Invalid account on line ${lineIndex}`);
@@ -59,7 +60,12 @@ export class AccountsService {
       sharedSecret =
         sharedSecret && Buffer.from(sharedSecret, 'base64').toString('base64') !== sharedSecret ? sharedSecret : null;
 
-      accounts.push({ username, password, sharedSecret, identitySecret: null });
+      identitySecret =
+        identitySecret && Buffer.from(identitySecret, 'base64').toString('base64') !== identitySecret
+          ? identitySecret
+          : null;
+
+      accounts.push({ username, password, sharedSecret, identitySecret });
     }
 
     this.accounts.push(...accounts);
