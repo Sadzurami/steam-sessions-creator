@@ -68,24 +68,23 @@ export class CreateService {
         }
       }
 
-      queue
-        .add(() =>
-          this.sessions
-            .create(account)
-            .then((session) => this.sessions.exportOne(session, path.resolve(options.output))),
-        )
-        .then(() => {
-          payload.created++;
-          this.logger.verbose(`Session for ${account.username} successfully created`);
-        })
-        .catch(() => {
-          payload.failed++;
-          this.logger.verbose(`Failed to create session for ${account.username}`);
-        })
-        .finally(() => {
-          payload.left--;
-        })
-        .then(() => delay(31 * 1000));
+      queue.add(() =>
+        this.sessions
+          .create(account)
+          .then((session) => this.sessions.exportOne(session, path.resolve(options.output)))
+          .then(() => {
+            payload.created++;
+            this.logger.verbose(`Session for ${account.username} successfully created`);
+          })
+          .catch(() => {
+            payload.failed++;
+            this.logger.verbose(`Failed to create session for ${account.username}`);
+          })
+          .finally(() => {
+            payload.left--;
+          })
+          .then(() => delay(31 * 1000)),
+      );
     }
 
     return payload;
