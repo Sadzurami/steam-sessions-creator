@@ -69,13 +69,15 @@ export class CreateCommand extends CommandRunner {
 
   @Option({
     flags: '-s, --secrets <secrets>',
-    description: 'specify file path where secrets are stored',
+    description: 'specify directory path where secrets are stored',
     defaultValue: './secrets',
   })
   parseSecretsOption(value: string) {
     value = path.resolve(value);
 
-    if (fs.existsSync(value) && !fs.statSync(value).isFile()) throw new Error(`Secrets option must be a file path`);
+    if (fs.existsSync(value) && !fs.statSync(value).isDirectory()) {
+      throw new Error(`Secrets option must be a directory path`);
+    }
 
     return value;
   }
