@@ -35,7 +35,7 @@ export class RenewCommand extends CommandRunner {
         payload.proxies,
       )} ${spinner}`;
 
-      const progressValue = Math.round(((payload.total - payload.left) / payload.total) * 100) || 0;
+      const progressValue = payload.left > 0 ? Math.floor(((payload.total - payload.left) / payload.total) * 100) : 100;
       const barSize = 30;
       const progressBar = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
       const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
