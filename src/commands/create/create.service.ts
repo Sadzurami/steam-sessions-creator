@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import pQueue from 'p-queue';
 import path from 'path';
+import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -52,24 +53,22 @@ export class CreateService {
       left: this.accounts.getCount(),
     };
 
-    const queue = new pQueue({
-      interval: 30 * 1000,
-      intervalCap: this.proxies.getCount() || 1,
-    });
+    // intervals for smooth progress and non blocking event loop
+    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 10, intervalCap: 1 });
 
     for (const account of accounts) {
-      const alreadyCreated = sessions.some((session) => session.Username === account.username);
+      queue.add(async () => {
+        const alreadyCreated = sessions.some((session) => session.Username === account.username);
 
-      if (alreadyCreated && !options.force) {
-        payload.created++;
-        payload.left--;
+        if (alreadyCreated && !options.force) {
+          payload.created++;
+          payload.left--;
 
-        this.logger.verbose(`Skipping create session for ${account.username}`);
-        continue;
-      }
+          this.logger.verbose(`Skipping create session for ${account.username}`);
+          return;
+        }
 
-      queue.add(() =>
-        this.sessions
+        await this.sessions
           .create(account)
           .then((session) => this.sessions.exportOne(session, path.resolve(options.output)))
           .then(() => {
@@ -82,8 +81,9 @@ export class CreateService {
           })
           .finally(() => {
             payload.left--;
-          }),
-      );
+          })
+          .then(() => delay(30 * 1000)); // prevent rate limit
+      });
     }
 
     return payload;
