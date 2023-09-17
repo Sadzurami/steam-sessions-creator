@@ -41,9 +41,9 @@ export class CreateCommand extends CommandRunner {
       const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
       const progressString = `${chalk.greenBright(barFill + barEmpty)} ${chalk.cyanBright(progressValue)} %`;
 
-      const resultsString = `Created: ${chalk.cyanBright(payload.created)}, Failed: ${chalk.cyanBright(
-        payload.failed,
-      )}, Left: ${chalk.cyanBright(payload.left)}`;
+      const resultsString = `Created: ${chalk.cyanBright(payload.created)}, Skipped: ${chalk.cyanBright(
+        payload.skipped,
+      )}, Failed: ${chalk.cyanBright(payload.failed)}, Left: ${chalk.cyanBright(payload.left)}`;
 
       logUpdate(`${resoursesString}\n\n${progressString}\n\n${resultsString}`);
 

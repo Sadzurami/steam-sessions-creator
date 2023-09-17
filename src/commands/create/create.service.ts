@@ -46,6 +46,7 @@ export class CreateService {
       secrets: this.secrets.getCount(),
       proxies: this.proxies.getCount(),
 
+      skipped: 0,
       created: 0,
       failed: 0,
 
@@ -61,7 +62,7 @@ export class CreateService {
         const alreadyCreated = sessions.some((session) => session.Username === account.username);
 
         if (alreadyCreated && !options.force) {
-          payload.created++;
+          payload.skipped++;
           payload.left--;
 
           this.logger.verbose(`Skipping create session for ${account.username}`);
