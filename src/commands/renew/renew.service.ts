@@ -65,8 +65,9 @@ export class RenewService {
           })
           .finally(() => {
             payload.left--;
-          })
-          .then(() => delay(30 * 1000)); // prevent rate limit
+          });
+
+        await delay(30 * 1000); // prevent rate limit
       });
     }
 
