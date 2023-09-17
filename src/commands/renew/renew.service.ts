@@ -38,7 +38,7 @@ export class RenewService {
     };
 
     // intervals for smooth progress and non blocking event loop
-    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 10, intervalCap: 1 });
+    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 1, intervalCap: 1 });
 
     for (const session of sessions) {
       queue.add(async () => {

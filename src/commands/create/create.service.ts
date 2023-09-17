@@ -55,7 +55,7 @@ export class CreateService {
     };
 
     // intervals for smooth progress and non blocking event loop
-    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 10, intervalCap: 1 });
+    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 1, intervalCap: 1 });
 
     for (const account of accounts) {
       queue.add(async () => {
