@@ -27,10 +27,10 @@ export class SessionsService {
   public async create(account: Account) {
     try {
       const desktopRefreshToken = await this.steam.createRefreshToken(account, 'desktop');
-      await delay(1000 * 31);
+      await delay(30 * 1000);
 
       const webRefreshToken = await this.steam.createRefreshToken(account, 'web');
-      await delay(1000 * 31);
+      await delay(30 * 1000);
 
       const mobileRefreshToken = await this.steam.createRefreshToken(account, 'mobile');
 

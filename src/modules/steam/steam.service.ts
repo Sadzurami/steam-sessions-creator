@@ -47,7 +47,7 @@ export class SteamService {
         session.cancelLoginAttempt();
 
         reject(new Error('Session timed out'));
-      }, 35000);
+      }, 30 * 1000);
 
       session.once('authenticated', () => {
         session.cancelLoginAttempt();

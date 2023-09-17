@@ -1,6 +1,5 @@
 import pQueue from 'p-queue';
 import path from 'path';
-import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -39,26 +38,26 @@ export class RenewService {
 
     const queue = new pQueue({
       concurrency: this.proxies.getCount() || 1,
-      interval: 10,
-      intervalCap: 1,
+      interval: 30 * 1000,
+      intervalCap: this.proxies.getCount() || 1,
     });
 
     for (const session of sessions) {
-      if (this.sessions.validateOne(session)) {
-        this.logger.verbose(`Session for ${session.Username} is valid and not expired yet`);
+      const sessionValid = this.sessions.validateOne(session);
 
-        if (!options.force) {
-          payload.skipped++;
-          payload.left--;
+      if (sessionValid && !options.force) {
+        payload.skipped++;
+        payload.left--;
 
-          this.logger.verbose(`Skipping renewing session for ${session.Username}`);
-          continue;
-        }
+        this.logger.verbose(`Skipping renew session for ${session.Username}`);
+        continue;
       }
+
+      const account = this.convertSessionToAccount(session);
 
       queue.add(() =>
         this.sessions
-          .create(this.convertSessionToAccount(session))
+          .create(account)
           .then((session) => this.sessions.exportOne(session, path.resolve(options.sessions)))
           .then(() => {
             payload.renewed++;
@@ -70,8 +69,7 @@ export class RenewService {
           })
           .finally(() => {
             payload.left--;
-          })
-          .then(() => delay(31 * 1000)),
+          }),
       );
     }
 

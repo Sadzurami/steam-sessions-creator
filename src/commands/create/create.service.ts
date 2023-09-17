@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import pQueue from 'p-queue';
 import path from 'path';
-import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -53,19 +52,21 @@ export class CreateService {
       left: this.accounts.getCount(),
     };
 
-    const queue = new pQueue({ concurrency: this.proxies.getCount() || 1, interval: 10, intervalCap: 1 });
+    const queue = new pQueue({
+      concurrency: this.proxies.getCount() || 1,
+      interval: 30 * 1000,
+      intervalCap: this.proxies.getCount() || 1,
+    });
 
     for (const account of accounts) {
-      if (sessions.some((session) => session.Username === account.username)) {
-        this.logger.verbose(`Session for ${account.username} already exists`);
+      const alreadyCreated = sessions.some((session) => session.Username === account.username);
 
-        if (!options.force) {
-          payload.created++;
-          payload.left--;
+      if (alreadyCreated && !options.force) {
+        payload.created++;
+        payload.left--;
 
-          this.logger.verbose(`Skipping creating session for ${account.username}`);
-          continue;
-        }
+        this.logger.verbose(`Skipping create session for ${account.username}`);
+        continue;
       }
 
       queue.add(() =>
@@ -82,8 +83,7 @@ export class CreateService {
           })
           .finally(() => {
             payload.left--;
-          })
-          .then(() => delay(31 * 1000)),
+          }),
       );
     }
 
