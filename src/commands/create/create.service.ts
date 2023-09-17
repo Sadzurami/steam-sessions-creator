@@ -53,7 +53,6 @@ export class CreateService {
     };
 
     const queue = new pQueue({
-      concurrency: this.proxies.getCount() || 1,
       interval: 30 * 1000,
       intervalCap: this.proxies.getCount() || 1,
     });
