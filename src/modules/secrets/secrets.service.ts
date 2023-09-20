@@ -47,7 +47,7 @@ export class SecretsService {
       return;
     }
 
-    files = files.filter((file) => file.endsWith('.maFile'));
+    files = files.filter((file) => file.toLowerCase().endsWith('.mafile'));
 
     for (const file of files) queue.add(() => this.importOne(`${directoryPath}/${file}`));
 
