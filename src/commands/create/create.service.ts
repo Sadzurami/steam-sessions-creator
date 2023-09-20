@@ -7,6 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { AccountsService } from '../../modules/accounts/accounts.service';
 import { ProxiesService } from '../../modules/proxies/proxies.service';
+import { Secrets } from '../../modules/secrets/secrets.interface';
 import { SecretsService } from '../../modules/secrets/secrets.service';
 import { SessionsService } from '../../modules/sessions/sessions.service';
 import { CreateOptions } from './create.options.interface';
@@ -36,9 +37,14 @@ export class CreateService {
     await this.sessions.importAll(path.resolve(options.output));
 
     const sessions = this.sessions.getAll();
+    const secrets = this.secrets.getAll();
+
+    const secretsMap = new Map<string, Secrets>();
+    secrets.forEach((secret) => secretsMap.set(secret.username, secret));
+
     const accounts = this.accounts.getAll().map((account) => ({
       ...account,
-      ...(this.secrets.findOne(account.username) || this.secrets.findOne(account.username.toLowerCase()) || {}),
+      ...(secretsMap.get(account.username) || secretsMap.get(account.username.toLowerCase()) || {}),
     }));
 
     const payload = {
