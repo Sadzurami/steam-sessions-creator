@@ -36,9 +36,10 @@ export class CreateService {
     await this.sessions.importAll(path.resolve(options.output));
 
     const sessions = this.sessions.getAll();
-    const accounts = this.accounts
-      .getAll()
-      .map((account) => ({ ...account, ...(this.secrets.findOne(account.username) || {}) }));
+    const accounts = this.accounts.getAll().map((account) => ({
+      ...account,
+      ...(this.secrets.findOne(account.username) || this.secrets.findOne(account.username.toLowerCase()) || {}),
+    }));
 
     const payload = {
       accounts: this.accounts.getCount(),
