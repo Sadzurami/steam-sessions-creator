@@ -10,20 +10,20 @@ import { Secrets } from './secrets.interface';
 export class SecretsService {
   private readonly logger = new Logger(SecretsService.name);
 
-  private readonly secrets: Secrets[] = [];
+  private readonly secrets = new Map<string, Secrets>();
 
   public getAll() {
     return this.secrets;
   }
 
   public getCount() {
-    return this.secrets.length;
+    return this.secrets.size;
   }
 
   public findOne(username: string): Secrets | null {
-    if (this.secrets.length === 0) return null;
+    if (this.secrets.size === 0) return null;
 
-    const secret = this.secrets.find((secret) => secret.username === username);
+    const secret = this.secrets.get(username) || this.secrets.get(username.toLowerCase());
     if (!secret) return null;
 
     return secret;
@@ -96,7 +96,9 @@ export class SecretsService {
 
     const username = account_name || path.basename(filePath, '.maFile');
 
-    this.secrets.push({ username, sharedSecret: shared_secret, identitySecret: identity_secret });
+    const secret = { username, sharedSecret: shared_secret, identitySecret: identity_secret };
+    this.secrets.set(username, secret);
+
     this.logger.verbose(`File ${filePath} successfully imported`);
   }
 }
