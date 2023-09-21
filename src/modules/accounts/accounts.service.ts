@@ -58,10 +58,10 @@ export class AccountsService {
       }
 
       sharedSecret =
-        sharedSecret && Buffer.from(sharedSecret, 'base64').toString('base64') !== sharedSecret ? sharedSecret : null;
+        sharedSecret && Buffer.from(sharedSecret, 'base64').toString('base64') === sharedSecret ? sharedSecret : null;
 
       identitySecret =
-        identitySecret && Buffer.from(identitySecret, 'base64').toString('base64') !== identitySecret
+        identitySecret && Buffer.from(identitySecret, 'base64').toString('base64') === identitySecret
           ? identitySecret
           : null;
 
