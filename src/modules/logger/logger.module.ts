@@ -1,4 +1,4 @@
-import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
+import { LoggerModule as PinoLoggerModule, Params } from 'nestjs-pino';
 
 import { Global, Module } from '@nestjs/common';
 
@@ -12,7 +12,7 @@ import { LoggerService } from './logger.service';
       providers: [LoggerService],
       useFactory: async (loggerService: LoggerService) => {
         loggerService.createLogger();
-        return { pinoHttp: { logger: loggerService.getLogger() } };
+        return { pinoHttp: { logger: loggerService.getLogger() } } as Params;
       },
     }),
   ],
