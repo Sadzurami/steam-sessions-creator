@@ -30,6 +30,8 @@ export class SteamService {
 
     const options: LoginSessionOptions = {};
 
+    if (platformType === EAuthTokenPlatformType.SteamClient) options.machineId = true;
+
     const proxy = this.proxies.getOne();
     if (proxy) {
       const proxyType = proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
