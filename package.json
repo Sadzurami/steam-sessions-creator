@@ -13,7 +13,6 @@
       "node_modules/@doctormckay/steam-crypto",
       "node_modules/pino",
       "node_modules/pino-http",
-      "node_modules/pino-pretty",
       "node_modules/thread-stream"
     ]
   },
