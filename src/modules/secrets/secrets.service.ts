@@ -94,7 +94,7 @@ export class SecretsService {
       return;
     }
 
-    const username = account_name || path.basename(filePath, '.maFile');
+    const username = account_name || path.basename(filePath).replace(/\.mafile$/i, '');
 
     const secret = { username, sharedSecret: shared_secret, identitySecret: identity_secret };
     this.secrets.set(username, secret);
