@@ -36,7 +36,7 @@ export class AccountsService {
       return;
     }
 
-    const lines = fileContent.split(/\s+|\r?\n/).map((line) => line.trim());
+    const lines = fileContent.split(/\r?\n/);
     if (lines.length === 0) return;
 
     const accounts: Account[] = [];
