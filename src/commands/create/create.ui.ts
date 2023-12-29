@@ -57,7 +57,7 @@ export class CreateUi {
 
     ui.div({ text: `${chalk.bold(appName)} ${appVersion}`, padding: [2, 0, 2, 2] });
     ui.div({
-      text: `creating sessions ${'.'.repeat(this.frameIndex % 4)}`,
+      text: `creating sessions ${this.create.progress === 100 ? 'complete' : '.'.repeat(this.frameIndex % 4)}`,
       width: 30,
       padding: [0, 0, 1, 2],
     });
