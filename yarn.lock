@@ -2662,7 +2662,7 @@ nest-commander@^3.12.5:
     cosmiconfig "8.3.6"
     inquirer "8.2.6"
 
-nestjs-pino@^3.5.0:
+nestjs-pino@3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/nestjs-pino/-/nestjs-pino-3.5.0.tgz#9c832e06310cc56e8673eb0ca47a8e95d9bd4431"
   integrity sha512-IWJ3dzLVjg5istcd3Cz3rVO+gmvabfVAT1YmQgzL1HnC2hkc0H6qA6k6SZ7OIwQfewuRejYfPu3TlkxwRrqxHQ==
@@ -2932,7 +2932,7 @@ pino-abstract-transport@v1.1.0:
     readable-stream "^4.0.0"
     split2 "^4.0.0"
 
-pino-http@^9.0.0:
+pino-http@9.0.0:
   version "9.0.0"
   resolved "https://registry.yarnpkg.com/pino-http/-/pino-http-9.0.0.tgz#854c65ff0b269ae67ada55996233b7c53ec146fd"
   integrity sha512-Q9QDNEz0vQmbJtMFjOVr2c9yL92vHudjmr3s3m6J1hbw3DBGFZJm3TIj9TWyynZ4GEsEA9SOtni4heRUr6lNOg==
@@ -2947,7 +2947,7 @@ pino-std-serializers@^6.0.0, pino-std-serializers@^6.2.2:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-6.2.2.tgz#d9a9b5f2b9a402486a5fc4db0a737570a860aab3"
   integrity sha512-cHjPPsE+vhj/tnhCy/wiMh3M3z3h/j15zHQX+S9GkTBgqJuTuJzYJ4gUyACLhDaJ7kk9ba9iRDmbH2tJU03OiA==
 
-pino@^8.17.1, pino@^8.17.2:
+pino@8.17.2, pino@^8.17.1:
   version "8.17.2"
   resolved "https://registry.yarnpkg.com/pino/-/pino-8.17.2.tgz#0ed20175623a69d31664a1e8a5f85476272224be"
   integrity sha512-LA6qKgeDMLr2ux2y/YiUt47EfgQ+S9LznBWOJdN3q1dx2sv0ziDLUBeVpyVv17TEcGCBuWf0zNtg3M5m1NhhWQ==
