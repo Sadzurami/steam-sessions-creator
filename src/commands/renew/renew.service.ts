@@ -63,7 +63,7 @@ export class RenewService {
 
       return 'success';
     } catch (error) {
-      this.logger.verbose(`Failed to renew session for ${session.Username}`);
+      this.logger.verbose(`Failed to renew session for ${session.Username}: ${error.message}`);
 
       return 'fail';
     } finally {
