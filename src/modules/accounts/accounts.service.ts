@@ -2,13 +2,25 @@ import fs from 'fs/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
 
+import { SecretsService } from '../secrets/secrets.service';
 import { Account } from './account.interface';
 
 @Injectable()
 export class AccountsService {
   private readonly logger = new Logger(AccountsService.name);
-
   private readonly accounts: Account[] = [];
+
+  private _importFilePath: string | null = null;
+
+  constructor(private readonly secrets: SecretsService) {}
+
+  public get importFilePath() {
+    return this._importFilePath;
+  }
+
+  public set importFilePath(value: string) {
+    this._importFilePath = value;
+  }
 
   public getAll() {
     return this.accounts;
@@ -18,7 +30,8 @@ export class AccountsService {
     return this.accounts.length;
   }
 
-  public async importAll(filePath: string) {
+  public async import() {
+    const filePath = this.importFilePath;
     if (!filePath) return;
 
     try {
@@ -39,7 +52,7 @@ export class AccountsService {
     const lines = fileContent.split(/\r?\n/);
     if (lines.length === 0) return;
 
-    const accounts: Account[] = [];
+    const accounts = new Map<string, Account>();
 
     let lineIndex = 0;
     for (const line of lines) {
@@ -47,28 +60,27 @@ export class AccountsService {
 
       const parts = line.split(':');
 
-      const username = parts[0];
-      const password = parts[1];
-      let sharedSecret = parts[2];
-      let identitySecret = parts[3];
-
+      const [username, password] = parts;
       if (!username || !password) {
         this.logger.verbose(`Invalid account on line ${lineIndex}`);
         continue;
       }
 
-      sharedSecret =
-        sharedSecret && Buffer.from(sharedSecret, 'base64').toString('base64') === sharedSecret ? sharedSecret : null;
+      const account: Account = { username, password, sharedSecret: null, identitySecret: null };
+      const secrets = this.secrets.getOne(account.username);
 
-      identitySecret =
-        identitySecret && Buffer.from(identitySecret, 'base64').toString('base64') === identitySecret
-          ? identitySecret
-          : null;
+      account.sharedSecret =
+        parts[2] && Buffer.from(parts[2], 'base64').toString('base64') === parts[2] ? parts[2] : null;
+      account.sharedSecret = account.sharedSecret || secrets?.sharedSecret || null;
 
-      accounts.push({ username, password, sharedSecret, identitySecret });
+      account.identitySecret =
+        parts[3] && Buffer.from(parts[3], 'base64').toString('base64') === parts[3] ? parts[3] : null;
+      account.identitySecret = account.identitySecret || secrets?.identitySecret || null;
+
+      accounts.set(account.username, account);
     }
 
-    this.accounts.push(...accounts);
+    this.accounts.push(...accounts.values());
     this.logger.verbose(`File ${filePath} successfully imported`);
   }
 }

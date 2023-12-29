@@ -1,12 +1,16 @@
-import chalk from 'chalk';
 import fs from 'fs';
-import logUpdate from 'log-update';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import path from 'path';
 
 import { AppService } from '../../app.service';
-import { CreateOptions } from './create.options.interface';
+import { AccountsService } from '../../modules/accounts/accounts.service';
+import { ProxiesService } from '../../modules/proxies/proxies.service';
+import { ReportsService } from '../../modules/reports/reports.service';
+import { SecretsService } from '../../modules/secrets/secrets.service';
+import { SessionsService } from '../../modules/sessions/sessions.service';
+import { CreateCommandOptions } from './create.command.options.interface';
 import { CreateService } from './create.service';
+import { CreateUi } from './create.ui';
 
 @Command({
   name: 'create',
@@ -15,43 +19,39 @@ import { CreateService } from './create.service';
 })
 export class CreateCommand extends CommandRunner {
   constructor(
+    private readonly sessions: SessionsService,
+    private readonly accounts: AccountsService,
+    private readonly secrets: SecretsService,
+    private readonly proxies: ProxiesService,
+    private readonly reports: ReportsService,
+    private readonly create: CreateService,
+    private readonly ui: CreateUi,
     private readonly app: AppService,
-    private readonly createService: CreateService,
   ) {
     super();
   }
 
-  async run(args: string[], options: CreateOptions) {
-    const payload = await this.createService.run(options);
+  async run(args: string[], options: CreateCommandOptions) {
+    this.ui.start();
 
-    let frameIndex = 0;
-    const spinnerFrames = ['-', '\\', '|', '/'];
+    this.sessions.importDirectoryPath = this.sessions.exportDirectoryPath = path.resolve(options.output);
+    await this.sessions.import();
 
-    const interval = setInterval(() => {
-      // use spinner to indicate that app is still running
-      const spinner = spinnerFrames[(frameIndex = ++frameIndex % spinnerFrames.length)];
+    this.accounts.importFilePath = path.resolve(options.accounts);
+    await this.accounts.import();
 
-      const resoursesString = `Accounts: ${chalk.cyanBright(payload.accounts)}, Secrets: ${chalk.cyanBright(
-        payload.secrets,
-      )}, Proxies: ${chalk.cyanBright(payload.proxies)} ${spinner}`;
+    this.secrets.importDirectoryPath = path.resolve(options.secrets);
+    await this.secrets.import();
 
-      const progressValue = payload.left > 0 ? Math.floor(((payload.total - payload.left) / payload.total) * 100) : 100;
-      const barSize = 30;
-      const barFill = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
-      const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
-      const progressString = `${chalk.greenBright(barFill + barEmpty)} ${chalk.cyanBright(progressValue)} %`;
+    this.proxies.importFilePath = path.resolve(options.proxies);
+    await this.proxies.import();
 
-      const resultsString = `Created: ${chalk.cyanBright(payload.created)}, Skipped: ${chalk.cyanBright(
-        payload.skipped,
-      )}, Failed: ${chalk.cyanBright(payload.failed)}, Left: ${chalk.cyanBright(payload.left)}`;
+    this.create.forceCreation = options.force;
+    await this.create.run();
+    await this.reports.export(this.create.stats);
 
-      logUpdate(`${resoursesString}\n\n${progressString}\n\n${resultsString}`);
-
-      if (payload.left === 0) {
-        clearInterval(interval);
-        this.app.shutdown();
-      }
-    }, 100);
+    this.ui.stop();
+    this.app.close();
   }
 
   @Option({

@@ -4,25 +4,22 @@ import path from 'path';
 import { setTimeout as delay } from 'timers/promises';
 
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
-import { Config, SessionsConfig } from '../../config/config.source';
 import { Account } from '../accounts/account.interface';
 import { SteamService } from '../steam/steam.service';
 import { Session } from './session.interface';
 
 @Injectable()
 export class SessionsService {
-  private readonly logger = new Logger(SessionsService.name);
-  private readonly sessions: Session[] = [];
-  private readonly schemaVersion: number;
+  public importDirectoryPath: string | null = null;
+  public exportDirectoryPath: string | null = null;
 
-  constructor(
-    private readonly config: ConfigService<Config>,
-    private readonly steam: SteamService,
-  ) {
-    this.schemaVersion = this.config.getOrThrow<SessionsConfig>('sessions').schemaVersion;
-  }
+  private readonly logger = new Logger(SessionsService.name);
+  private readonly sessions: Map<string, Session> = new Map();
+
+  private readonly schemaVersion: number = 2;
+
+  constructor(private readonly steam: SteamService) {}
 
   public async create(account: Account) {
     try {
@@ -35,6 +32,7 @@ export class SessionsService {
       const mobileRefreshToken = await this.steam.createRefreshToken(account, 'mobile');
 
       const { sub: steamId } = this.steam.decodeRefreshToken(desktopRefreshToken);
+      if (!steamId) throw new Error('Failed find SteamID in decoded desktop refresh token');
 
       const session: Session = {
         Username: account.username,
@@ -52,32 +50,35 @@ export class SessionsService {
         SchemaVersion: this.schemaVersion,
       };
 
-      this.sessions.push(session);
-
-      this.logger.verbose(`Session for ${account.username} successfully created`);
+      this.sessions.set(session.Username, session);
 
       return session;
     } catch (error) {
-      error = new Error('Failed to create session', { cause: error });
-
-      this.logger.debug(error);
-      throw error;
+      throw new Error('Failed to create session', { cause: error });
     }
   }
 
+  public getOne(username: string) {
+    if (this.sessions.size === 0) return null;
+
+    const session = this.sessions.get(username) || this.sessions.get(username.toLowerCase());
+    if (!session) return null;
+
+    return session;
+  }
+
   public getAll() {
-    return this.sessions;
+    return [...this.sessions.values()];
   }
 
   public getCount() {
-    return this.sessions.length;
+    return this.sessions.size;
   }
 
-  public clear() {
-    this.sessions.splice(0, this.sessions.length);
-  }
+  public async import() {
+    const directoryPath = this.importDirectoryPath;
+    if (!directoryPath) return;
 
-  public async importAll(directoryPath: string) {
     const queue = new pQueue({ concurrency: 512 });
 
     try {
@@ -97,13 +98,57 @@ export class SessionsService {
 
     files = files.filter((file) => file.endsWith('.steamsession'));
 
-    for (const file of files) queue.add(() => this.importOne(`${directoryPath}/${file}`));
+    for (const file of files) queue.add(() => this.importFromFile(path.join(directoryPath, file)));
 
     await queue.onIdle();
     this.logger.verbose(`Directory ${directoryPath} successfully imported`);
   }
 
-  public async importOne(filePath: string) {
+  public async exportOne(session: Session) {
+    try {
+      await fs.access(this.exportDirectoryPath, fs.constants.F_OK | fs.constants.W_OK);
+    } catch (error) {
+      await fs.mkdir(this.exportDirectoryPath, { recursive: true });
+    }
+
+    const filePath = path.join(this.exportDirectoryPath, `${session.Username}.steamsession`);
+    const fileContent = JSON.stringify(session, null, 2);
+
+    await fs.writeFile(filePath, fileContent, 'utf8');
+    this.logger.verbose(`File ${filePath} successfully exported`);
+  }
+
+  public validateOne(session: Session) {
+    const requiredFields = [
+      'Username',
+      'Password',
+      'SteamId',
+      'WebRefreshToken',
+      'MobileRefreshToken',
+      'DesktopRefreshToken',
+      'SchemaVersion',
+    ];
+    if (!requiredFields.every((field) => session[field])) return false;
+
+    if (session.SchemaVersion !== this.schemaVersion) return false;
+
+    try {
+      let expiry = this.steam.decodeRefreshToken(session.DesktopRefreshToken).exp;
+      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
+
+      expiry = this.steam.decodeRefreshToken(session.WebRefreshToken).exp;
+      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
+
+      expiry = this.steam.decodeRefreshToken(session.MobileRefreshToken).exp;
+      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
+    } catch (error) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private async importFromFile(filePath: string) {
     if (!filePath) return;
 
     try {
@@ -148,54 +193,7 @@ export class SessionsService {
       SchemaVersion,
     };
 
-    this.sessions.push(session);
+    this.sessions.set(session.Username, session);
     this.logger.verbose(`File ${filePath} successfully imported`);
-  }
-
-  public async exportOne(session: Session, directoryPath: string) {
-    const filePath = path.join(directoryPath, `${session.Username}.steamsession`);
-    const fileContent = JSON.stringify(session, null, 2);
-
-    try {
-      await fs.writeFile(filePath, fileContent, 'utf8');
-    } catch (error) {
-      error = new Error(`Error writing file ${filePath}`, { cause: error });
-
-      this.logger.debug(error);
-      throw error;
-    }
-
-    this.logger.verbose(`File ${filePath} successfully exported`);
-  }
-
-  public validateOne(session: Session) {
-    const requiredFields = [
-      'Username',
-      'Password',
-      'SteamId',
-      'WebRefreshToken',
-      'MobileRefreshToken',
-      'DesktopRefreshToken',
-      'SchemaVersion',
-    ];
-
-    if (!requiredFields.every((field) => session[field])) return false;
-
-    if (session.SchemaVersion !== this.schemaVersion) return false;
-
-    try {
-      let expiry = this.steam.decodeRefreshToken(session.DesktopRefreshToken).exp;
-      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
-
-      expiry = this.steam.decodeRefreshToken(session.WebRefreshToken).exp;
-      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
-
-      expiry = this.steam.decodeRefreshToken(session.MobileRefreshToken).exp;
-      if (expiry - Date.now() / 1000 < 60 * 60 * 24 * 30) return false;
-    } catch (error) {
-      return false;
-    }
-
-    return true;
   }
 }

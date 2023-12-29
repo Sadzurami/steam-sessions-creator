@@ -1,4 +1,4 @@
-export interface CreateOptions {
+export interface CreateCommandOptions {
   accounts?: string;
   secrets?: string;
   proxies?: string;

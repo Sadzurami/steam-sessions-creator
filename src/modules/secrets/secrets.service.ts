@@ -8,19 +8,12 @@ import { Secrets } from './secrets.interface';
 
 @Injectable()
 export class SecretsService {
-  private readonly logger = new Logger(SecretsService.name);
+  public importDirectoryPath: string | null = null;
 
+  private readonly logger = new Logger(SecretsService.name);
   private readonly secrets = new Map<string, Secrets>();
 
-  public getAll() {
-    return this.secrets;
-  }
-
-  public getCount() {
-    return this.secrets.size;
-  }
-
-  public findOne(username: string): Secrets | null {
+  public getOne(username: string): Secrets | null {
     if (this.secrets.size === 0) return null;
 
     const secret = this.secrets.get(username) || this.secrets.get(username.toLowerCase());
@@ -29,7 +22,14 @@ export class SecretsService {
     return secret;
   }
 
-  public async importAll(directoryPath: string) {
+  public getCount() {
+    return this.secrets.size;
+  }
+
+  public async import() {
+    const directoryPath = this.importDirectoryPath;
+    if (!directoryPath) return;
+
     const queue = new pQueue({ concurrency: 512 });
 
     try {
@@ -49,13 +49,13 @@ export class SecretsService {
 
     files = files.filter((file) => file.toLowerCase().endsWith('.mafile'));
 
-    for (const file of files) queue.add(() => this.importOne(`${directoryPath}/${file}`));
+    for (const file of files) queue.add(() => this.importFromFile(path.join(directoryPath, file)));
 
     await queue.onIdle();
     this.logger.verbose(`Directory ${directoryPath} successfully imported`);
   }
 
-  public async importOne(filePath: string) {
+  private async importFromFile(filePath: string) {
     if (!filePath) return;
 
     try {

@@ -4,8 +4,9 @@ import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class ProxiesService {
-  private readonly logger = new Logger(ProxiesService.name);
+  public importFilePath: string | null = null;
 
+  private readonly logger = new Logger(ProxiesService.name);
   private readonly proxies: string[] = [];
   private index = 0;
 
@@ -24,7 +25,8 @@ export class ProxiesService {
     return this.proxies.length;
   }
 
-  public async importAll(filePath: string) {
+  public async import() {
+    const filePath = this.importFilePath;
     if (!filePath) return;
 
     try {
@@ -42,10 +44,10 @@ export class ProxiesService {
       return;
     }
 
-    const lines = fileContent.split(/\s+|\r?\n/).map((line) => line.trim());
+    const lines = fileContent.split(/\r?\n/).map((line) => line.trim());
     if (lines.length === 0) return;
 
-    const proxies: string[] = [];
+    const proxies = new Set<string>();
 
     let lineIndex = 0;
     for (const line of lines) {
@@ -53,13 +55,13 @@ export class ProxiesService {
 
       try {
         const proxy = new URL(line).toString().replace(/\/$/, '');
-        if (!proxies.includes(proxy)) proxies.push(proxy);
+        proxies.add(proxy);
       } catch (error) {
         this.logger.debug(new Error(`Invalid proxy at line ${lineIndex}`, { cause: error }));
       }
     }
 
     this.proxies.push(...proxies);
-    this.logger.verbose(`Imported ${proxies.length} proxies from file ${filePath}`);
+    this.logger.verbose(`Imported ${proxies.size} proxies from file ${filePath}`);
   }
 }

@@ -3,7 +3,8 @@ import { Subject } from 'rxjs';
 import { Injectable, Logger, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { AppConfig, Config } from './config/config.source';
+import { AppConfig } from './config/interfaces/app.config.interface';
+import { Config } from './config/interfaces/config.interface';
 
 @Injectable()
 export class AppService implements OnModuleInit, OnApplicationShutdown {
@@ -23,14 +24,14 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
     process.exit(0);
   }
 
-  public shutdown() {
+  public close() {
     if (this.isShuttingDown) return;
     this.isShuttingDown = true;
 
     this.shutdownListener$.next();
   }
 
-  public onShutdown(listener: () => any) {
+  public onClose(listener: () => any) {
     this.shutdownListener$.subscribe(listener);
   }
 
@@ -47,11 +48,11 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
   private catchExceptions() {
     process.on('uncaughtException', (error) => {
       this.logger.error(new Error('Uncaught exception', { cause: error }));
-      this.shutdown();
+      this.close();
     });
     process.on('unhandledRejection', (reason) => {
       this.logger.error(new Error('Unhandled rejection', { cause: reason }));
-      this.shutdown();
+      this.close();
     });
   }
 }

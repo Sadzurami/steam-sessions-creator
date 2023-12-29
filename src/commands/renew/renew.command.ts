@@ -1,12 +1,14 @@
-import chalk from 'chalk';
 import fs from 'fs';
-import logUpdate from 'log-update';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import path from 'path';
 
 import { AppService } from '../../app.service';
-import { RenewOptions } from './renew.options.interface';
+import { ProxiesService } from '../../modules/proxies/proxies.service';
+import { ReportsService } from '../../modules/reports/reports.service';
+import { SessionsService } from '../../modules/sessions/sessions.service';
+import { RenewCommandOptions } from './renew.command.options.interface';
 import { RenewService } from './renew.service';
+import { RenewUi } from './renew.ui';
 
 @Command({
   name: 'renew',
@@ -15,44 +17,31 @@ import { RenewService } from './renew.service';
 })
 export class RenewCommand extends CommandRunner {
   constructor(
+    private readonly sessions: SessionsService,
+    private readonly proxies: ProxiesService,
+    private readonly renew: RenewService,
+    private readonly reports: ReportsService,
+    private readonly ui: RenewUi,
     private readonly app: AppService,
-    private readonly renewService: RenewService,
   ) {
     super();
   }
 
-  async run(args: string[], options: RenewOptions) {
-    const payload = await this.renewService.run(options);
+  async run(args: string[], options: RenewCommandOptions) {
+    this.ui.start();
 
-    let frameIndex = 0;
-    const spinnerFrames = ['-', '\\', '|', '/'];
+    this.sessions.importDirectoryPath = path.resolve(options.sessions);
+    await this.sessions.import();
 
-    const interval = setInterval(() => {
-      // use spinner to indicate that app is still running
-      const spinner = spinnerFrames[(frameIndex = ++frameIndex % spinnerFrames.length)];
+    this.proxies.importFilePath = path.resolve(options.proxies);
+    await this.proxies.import();
 
-      const resoursesString = `Sessions: ${chalk.cyanBright(payload.sessions)}, Proxies: ${chalk.cyanBright(
-        payload.proxies,
-      )} ${spinner}`;
+    this.renew.forceRenewing = options.force;
+    await this.renew.run();
+    await this.reports.export(this.renew.stats);
 
-      const progressValue = payload.left > 0 ? Math.floor(((payload.total - payload.left) / payload.total) * 100) : 100;
-      const barSize = 30;
-      const progressBar = `${'█'.repeat(Math.round((progressValue / 100) * barSize))}`;
-      const barEmpty = `${'░'.repeat(barSize - Math.round((progressValue / 100) * barSize))}`;
-
-      const progressString = `${chalk.greenBright(progressBar + barEmpty)} ${chalk.cyanBright(progressValue)} %`;
-
-      const resultsString = `Renewed: ${chalk.cyanBright(payload.renewed)}, Skipped: ${chalk.cyanBright(
-        payload.skipped,
-      )}, Failed: ${chalk.cyanBright(payload.failed)}, Left: ${chalk.cyanBright(payload.left)}`;
-
-      logUpdate(`${resoursesString}\n\n${progressString}\n\n${resultsString}`);
-
-      if (payload.left === 0) {
-        clearInterval(interval);
-        this.app.shutdown();
-      }
-    }, 100);
+    this.ui.stop();
+    this.app.close();
   }
 
   @Option({

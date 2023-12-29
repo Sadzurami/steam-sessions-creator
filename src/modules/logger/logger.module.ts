@@ -11,8 +11,8 @@ import { LoggerService } from './logger.service';
       inject: [LoggerService],
       providers: [LoggerService],
       useFactory: async (loggerService: LoggerService) => {
-        loggerService.createLogger();
-        return { pinoHttp: { logger: loggerService.getLogger() } } as Params;
+        const logger = loggerService.createLogger();
+        return { pinoHttp: { logger } } as unknown as Params;
       },
     }),
   ],

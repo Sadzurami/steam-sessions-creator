@@ -12,14 +12,15 @@ async function bootstrap() {
 
   const logger = app.get(Logger);
   app.useLogger(logger);
+  app.flushLogs();
 
   const appService = app.get(AppService);
-  appService.onShutdown(() => app.close());
+  appService.onClose(() => app.close());
 
   try {
     await CommandFactory.runApplication(app);
   } catch (error) {
-    logger.error(error.message);
-    appService.shutdown();
+    logger.error(error);
+    appService.close();
   }
 }
