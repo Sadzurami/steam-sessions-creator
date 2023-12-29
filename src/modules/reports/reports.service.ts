@@ -16,7 +16,7 @@ export class ReportsService {
     const filePath = this.getExportFilePath();
 
     const fileContent = Object.entries(report)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}:\n\n${value}`)
+      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}:\n\n${value.join('\n')}`)
       .join('\n\n');
 
     try {

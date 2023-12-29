@@ -88,11 +88,6 @@ export class CreateUi {
       { text: `skip: ${chalk.cyanBright(skip.length)}`, width: 30, padding: [0, 0, 1, 2] },
     );
 
-    ui.div({
-      text: `${chalk.bold('Progress')} ${chalk.cyanBright(this.create.progress)}%`,
-      padding: [0, 0, 1, 2],
-    });
-
     return ui.toString();
   }
 }
