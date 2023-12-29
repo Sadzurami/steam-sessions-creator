@@ -37,11 +37,11 @@ export class CreateCommand extends CommandRunner {
     this.sessions.importDirectoryPath = this.sessions.exportDirectoryPath = path.resolve(options.output);
     await this.sessions.import();
 
-    this.accounts.importFilePath = path.resolve(options.accounts);
-    await this.accounts.import();
-
     this.secrets.importDirectoryPath = path.resolve(options.secrets);
     await this.secrets.import();
+
+    this.accounts.importFilePath = path.resolve(options.accounts);
+    await this.accounts.import();
 
     this.proxies.importFilePath = path.resolve(options.proxies);
     await this.proxies.import();
