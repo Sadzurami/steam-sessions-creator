@@ -31,6 +31,7 @@ export class RenewCommand extends CommandRunner {
     this.ui.start();
 
     this.sessions.importDirectoryPath = path.resolve(options.sessions);
+    this.sessions.exportDirectoryPath = path.resolve(options.sessions);
     await this.sessions.import();
 
     this.proxies.importFilePath = path.resolve(options.proxies);

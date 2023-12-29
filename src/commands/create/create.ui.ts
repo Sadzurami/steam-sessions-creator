@@ -34,9 +34,10 @@ export class CreateUi {
   }
 
   public stop() {
+    this.showUi(); // show final ui
+
     clearInterval(this.interval);
     this.interval = null;
-    logUpdate.clear();
   }
 
   private showUi() {

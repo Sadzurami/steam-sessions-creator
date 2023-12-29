@@ -54,7 +54,7 @@ export class SessionsService {
 
       return session;
     } catch (error) {
-      throw new Error('Failed to create session', { cause: error });
+      throw new Error(`Failed to create session: ${error.message}`);
     }
   }
 

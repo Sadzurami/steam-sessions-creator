@@ -32,9 +32,10 @@ export class RenewUi {
   }
 
   public stop() {
+    this.showUi(); // show final ui
+
     clearInterval(this.interval);
     this.interval = null;
-    logUpdate.clear();
   }
 
   private showUi() {

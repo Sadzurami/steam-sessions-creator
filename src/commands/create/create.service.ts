@@ -56,7 +56,7 @@ export class CreateService {
 
       return 'success';
     } catch (error) {
-      this.logger.verbose(`Failed to create session for ${account.username}: ${error.message}`);
+      this.logger.warn(`Failed to create session for ${account.username}: ${error.message}`);
 
       return 'fail';
     } finally {
