@@ -9,6 +9,6 @@ import { RenewUi } from './renew.ui';
 
 @Module({
   imports: [SessionsModule, ProxiesModule, ReportsModule],
-  providers: [RenewCommand, RenewService, RenewUi],
+  providers: [RenewService, RenewUi, RenewCommand],
 })
 export class RenewModule {}

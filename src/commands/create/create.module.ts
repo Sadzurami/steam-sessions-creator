@@ -11,6 +11,6 @@ import { CreateUi } from './create.ui';
 
 @Module({
   imports: [SessionsModule, AccountsModule, SecretsModule, ProxiesModule, ReportsModule],
-  providers: [CreateCommand, CreateService, CreateUi],
+  providers: [CreateService, CreateUi, CreateCommand],
 })
 export class CreateModule {}
