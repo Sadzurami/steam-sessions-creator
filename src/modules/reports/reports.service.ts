@@ -16,8 +16,8 @@ export class ReportsService {
     const filePath = this.getExportFilePath();
 
     const fileContent = Object.entries(report)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}:\n\n${value.join('\n')}`)
-      .join('\n\n');
+      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}:\n${value.join('\n')}`)
+      .join(`\n${'-'.repeat(40)}\n`);
 
     try {
       await fs.access(filePath, fs.constants.F_OK | fs.constants.W_OK);
