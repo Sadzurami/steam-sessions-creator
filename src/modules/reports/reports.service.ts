@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import path from 'path';
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,7 +22,7 @@ export class ReportsService {
     try {
       await fs.access(filePath, fs.constants.F_OK | fs.constants.W_OK);
     } catch (error) {
-      await fs.mkdir(filePath, { recursive: true });
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
     }
 
     await fs.writeFile(filePath, fileContent, 'utf8');
