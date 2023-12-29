@@ -1,21 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
-export interface Config {
-  app: AppConfig;
-  sessions: SessionsConfig;
-}
-
-export interface AppConfig {
-  env: 'development' | 'production';
-  cwd: string;
-  name: string;
-  version: string;
-}
-
-export interface SessionsConfig {
-  schemaVersion: number;
-}
+import { AppConfig } from './interfaces/app.config.interface';
+import { Config } from './interfaces/config.interface';
+import { LoggerConfig } from './interfaces/logger.config.interface';
 
 const env = (<any>process).pkg ? 'production' : 'development';
 const cwd = env === 'production' ? path.dirname(process.execPath) : process.cwd();
@@ -24,7 +12,7 @@ const cwd = env === 'production' ? path.dirname(process.execPath) : process.cwd(
 export default (): Config => {
   const packageJson = readPackageJson();
 
-  const appConfig: AppConfig = {
+  const app: AppConfig = {
     env,
     cwd,
     name: packageJson.name
@@ -34,14 +22,15 @@ export default (): Config => {
     version: packageJson.version,
   };
 
-  const sessionsConfig: SessionsConfig = {
-    schemaVersion: 2,
+  const logger: LoggerConfig = {
+    filePath: path.join(cwd, 'logs', `${new Date().toJSON().replace(/[^\d]/g, '.').slice(0, -1)}.log`),
   };
 
-  return {
-    app: appConfig,
-    sessions: sessionsConfig,
+  const reports = {
+    filePath: path.join(cwd, 'reports', `${new Date().toJSON().replace(/[^\d]/g, '.').slice(0, -1)}.txt`),
   };
+
+  return { app, logger, reports };
 };
 
 function readPackageJson() {
