@@ -16,7 +16,7 @@ export class ReportsService {
     const filePath = this.getExportFilePath();
 
     const fileContent = Object.entries(report)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}:\n${value.join('\n')}`)
+      .map(([k, v]) => `${k[0].toUpperCase() + k.slice(1)}:\n\n${Array.isArray(v) ? v.join('\n') : v}`)
       .join(`\n${'-'.repeat(40)}\n`);
 
     try {
