@@ -25,7 +25,7 @@ export class RenewService {
     const { success, fail, skip } = this.stats;
     const total = this.sessions.getCount();
 
-    return Math.floor(((success.length + fail.length + skip.length) / total) * 100);
+    return total > 0 ? Math.floor(((success.length + fail.length + skip.length) / total) * 100) : 100;
   }
 
   public async run() {

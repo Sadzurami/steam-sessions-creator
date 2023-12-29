@@ -26,7 +26,7 @@ export class CreateService {
     const { success, fail, skip } = this.stats;
     const total = this.accounts.getCount();
 
-    return Math.floor(((success.length + fail.length + skip.length) / total) * 100);
+    return total > 0 ? Math.floor(((success.length + fail.length + skip.length) / total) * 100) : 100;
   }
 
   public async run() {
