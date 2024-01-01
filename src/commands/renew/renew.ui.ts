@@ -55,7 +55,7 @@ export class RenewUi {
 
     ui.div({ text: `${chalk.bold(appName)} ${appVersion}`, padding: [2, 0, 2, 2] });
     ui.div({
-      text: `renewing sessions ${this.renew.progress === 100 ? 'complete' : '.'.repeat(this.frameIndex % 4)}`,
+      text: `renewing sessions ${this.renew.progress === 100 ? '- completed' : '.'.repeat(this.frameIndex % 4)}`,
       width: 30,
       padding: [0, 0, 1, 2],
     });
