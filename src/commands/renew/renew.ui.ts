@@ -39,8 +39,8 @@ export class RenewUi {
   }
 
   private showUi() {
-    this.frameIndex++;
     if (this.frameIndex >= 1000) this.frameIndex = 0;
+    this.frameIndex++;
 
     const delimiter = '\n' + chalk.bold('-'.repeat(this.width)) + '\n';
     const ui = [this.createHeaderUi(), this.createResourcesUi(), this.createStatisticsUi()].join(delimiter);
