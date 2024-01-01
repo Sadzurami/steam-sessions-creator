@@ -8,15 +8,15 @@ export class ProxiesService {
 
   private readonly logger = new Logger(ProxiesService.name);
   private readonly proxies: string[] = [];
-  private index = 0;
+  private proxyIndex = 0;
 
   constructor() {}
 
   public getOne(): string | null {
     if (this.proxies.length === 0) return null;
 
-    const proxy = this.proxies[this.index];
-    this.index = (this.index + 1) % this.proxies.length;
+    const proxy = this.proxies[this.proxyIndex];
+    this.proxyIndex = (this.proxyIndex + 1) % this.proxies.length;
 
     return proxy;
   }
