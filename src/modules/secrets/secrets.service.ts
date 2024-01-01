@@ -30,8 +30,6 @@ export class SecretsService {
     const directoryPath = this.importDirectoryPath;
     if (!directoryPath) return;
 
-    const queue = new pQueue({ concurrency: 512 });
-
     try {
       await fs.access(directoryPath, fs.constants.F_OK | fs.constants.R_OK);
     } catch (error) {
@@ -49,6 +47,7 @@ export class SecretsService {
 
     files = files.filter((file) => file.toLowerCase().endsWith('.mafile'));
 
+    const queue = new pQueue({ concurrency: 512 });
     for (const file of files) queue.add(() => this.importFromFile(path.join(directoryPath, file)));
 
     await queue.onIdle();
