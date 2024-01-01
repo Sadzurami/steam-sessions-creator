@@ -47,7 +47,7 @@ export class CreateCommand extends CommandRunner {
     await this.proxies.import();
 
     this.create.forceCreation = options.force;
-    await this.create.run();
+    await this.create.start();
     await this.reports.export(this.create.stats);
 
     this.ui.stop();

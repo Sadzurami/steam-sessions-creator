@@ -38,7 +38,7 @@ export class RenewCommand extends CommandRunner {
     await this.proxies.import();
 
     this.renew.forceRenewing = options.force;
-    await this.renew.run();
+    await this.renew.start();
     await this.reports.export(this.renew.stats);
 
     this.ui.stop();

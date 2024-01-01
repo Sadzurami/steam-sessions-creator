@@ -1,7 +1,7 @@
 import pQueue from 'p-queue';
 import { setTimeout as delay } from 'timers/promises';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 
 import { Account } from '../../modules/accounts/account.interface';
 import { AccountsService } from '../../modules/accounts/accounts.service';
@@ -9,12 +9,12 @@ import { ProxiesService } from '../../modules/proxies/proxies.service';
 import { SessionsService } from '../../modules/sessions/sessions.service';
 
 @Injectable()
-export class CreateService {
+export class CreateService implements OnModuleDestroy {
+  public readonly stats: Record<string, string[]> = { success: [], fail: [], skip: [] };
   public forceCreation = false;
 
-  public readonly stats: Record<string, string[]> = { success: [], fail: [], skip: [] };
-
   private readonly logger = new Logger(CreateService.name);
+  private queue: pQueue;
 
   constructor(
     private readonly sessions: SessionsService,
@@ -29,7 +29,11 @@ export class CreateService {
     return total > 0 ? Math.floor(((success.length + fail.length + skip.length) / total) * 100) : 100;
   }
 
-  public async run() {
+  public async onModuleDestroy() {
+    this.stop();
+  }
+
+  public async start() {
     const accounts = this.accounts.getAll();
     if (!accounts.length) return;
 
@@ -38,7 +42,15 @@ export class CreateService {
       queue.add(() => this.runTask(account)).then((result) => this.stats[result].push(account.username));
     }
 
+    this.queue = queue;
     await queue.onIdle();
+  }
+
+  public stop() {
+    if (!this.queue) return;
+
+    this.queue.pause();
+    this.queue.clear();
   }
 
   private async runTask(account: Account): Promise<'success' | 'fail' | 'skip'> {
