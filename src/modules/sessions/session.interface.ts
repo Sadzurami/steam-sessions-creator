@@ -11,5 +11,7 @@ export interface Session {
   MobileRefreshToken: string;
   DesktopRefreshToken: string;
 
+  Proxy: string | null;
+
   SchemaVersion: number;
 }

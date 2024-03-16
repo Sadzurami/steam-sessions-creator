@@ -17,7 +17,7 @@ export class SessionsService {
   private readonly logger = new Logger(SessionsService.name);
   private readonly sessions: Map<string, Session> = new Map();
 
-  private readonly schemaVersion: number = 2;
+  private readonly schemaVersion: number = 3;
 
   constructor(private readonly steam: SteamService) {}
 
@@ -46,6 +46,8 @@ export class SessionsService {
         WebRefreshToken: webRefreshToken,
         MobileRefreshToken: mobileRefreshToken,
         DesktopRefreshToken: desktopRefreshToken,
+
+        Proxy: null,
 
         SchemaVersion: this.schemaVersion,
       };
@@ -126,11 +128,9 @@ export class SessionsService {
       'WebRefreshToken',
       'MobileRefreshToken',
       'DesktopRefreshToken',
-      'SchemaVersion',
     ];
-    if (!requiredFields.every((field) => session[field])) return false;
 
-    if (session.SchemaVersion !== this.schemaVersion) return false;
+    if (!requiredFields.every((field) => session[field])) return false;
 
     try {
       let expiry = this.steam.decodeRefreshToken(session.DesktopRefreshToken).exp;
@@ -190,6 +190,7 @@ export class SessionsService {
       WebRefreshToken: parsedContent.WebRefreshToken || '',
       MobileRefreshToken: parsedContent.MobileRefreshToken || '',
       DesktopRefreshToken: parsedContent.DesktopRefreshToken || '',
+      Proxy: parsedContent.Proxy || null,
       SchemaVersion,
     };
 
