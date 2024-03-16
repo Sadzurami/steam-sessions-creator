@@ -22,7 +22,7 @@ Typically, steam session contains:
   "MobileRefreshToken": "...",
   "DesktopRefreshToken": "...",
 
-  "SchemaVersion": 2
+  "SchemaVersion": 3
 }
 ```
 
