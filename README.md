@@ -22,6 +22,8 @@ Typically, steam session contains:
   "MobileRefreshToken": "...",
   "DesktopRefreshToken": "...",
 
+  "Proxy": "...",
+
   "SchemaVersion": 3
 }
 ```
@@ -34,6 +36,7 @@ Typically, steam session contains:
 - `WebRefreshToken` - refresh token for login via web
 - `MobileRefreshToken` - refresh token for login via mobile app
 - `DesktopRefreshToken` - refresh token for login via steam client
+- `Proxy` - proxy used for session (always null until you specify it by yourself)
 - `SchemaVersion` - schema version of steam session
 
 ## Installation
