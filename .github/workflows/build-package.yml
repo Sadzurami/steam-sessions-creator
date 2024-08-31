@@ -1,0 +1,31 @@
+name: build-package
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: Select the operating system for the build
+        type: choice
+        options:
+          - macos
+          - ubuntu
+          - windows
+        default: windows
+        required: true
+
+jobs:
+  build-package:
+    runs-on: ${{ inputs.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn build:package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ inputs.os }}
+          path: package/*
+          retention-days: 1
