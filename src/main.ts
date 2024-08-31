@@ -18,12 +18,10 @@ import { Session } from './interfaces/session.interface';
 const sessionSchemaVersion = 3;
 const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 
-const tasksQueue = new PQueue({ concurrency: 1, interval: 1, intervalCap: 1 });
-
 init()
   .then(() => main())
-  .then(() => exit())
-  .catch((error) => exit(error));
+  .then(() => exit({ manual: true }))
+  .catch((error) => exit({ error }));
 
 async function init() {
   const logger = new Logger('init');
@@ -56,7 +54,7 @@ async function init() {
   logger.info(`Version: ${appVersion}`);
 
   setProcessTitle(`${appName} v${appVersion}`);
-  closeWithGrace({ delay: false, logger: false }, ({ err }) => exit(err));
+  closeWithGrace({ delay: false, logger: false }, ({ signal, err }) => exit({ signal, error: err }));
 }
 
 async function main() {
@@ -86,7 +84,7 @@ async function main() {
   logger.info('-');
   logger.info('Starting tasks');
 
-  tasksQueue.concurrency = concurrency;
+  const queue = new PQueue({ concurrency, interval: 1, intervalCap: 1 });
 
   const mappedAccounts = new Map(accounts.map((account) => [account.username.toLowerCase(), account]));
   const mappedSessions = new Map(sessions.map((session) => [session.Username.toLowerCase(), session]));
@@ -133,7 +131,7 @@ async function main() {
       SchemaVersion: sessionSchemaVersion,
     };
 
-    tasksQueue.add(async () => {
+    queue.add(async () => {
       try {
         const proxy = proxies[proxyIndex++ % proxies.length];
         const bot = new Bot({ name: account.username, account }, proxy);
@@ -149,7 +147,7 @@ async function main() {
         await bot.start({ platform: 'desktop' }).finally(() => bot.stop());
         session.DesktopRefreshToken = bot.refreshToken;
 
-        session.Proxy = app.opts().preserveProxy === true ? proxy : null;
+        session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
 
         await saveSession(session as Session);
@@ -183,7 +181,7 @@ async function main() {
       identitySecret: session.IdentitySecret,
     };
 
-    tasksQueue.add(async () => {
+    queue.add(async () => {
       try {
         const proxy = session.Proxy || proxies[proxyIndex++ % proxies.length];
         const bot = new Bot({ name: account.username, account }, proxy);
@@ -199,7 +197,7 @@ async function main() {
         await bot.start({ platform: 'desktop' }).finally(() => bot.stop());
         session.DesktopRefreshToken = bot.refreshToken;
 
-        session.Proxy = app.opts().preserveProxy === true ? proxy : null;
+        session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
         session.SchemaVersion = sessionSchemaVersion;
 
@@ -213,27 +211,34 @@ async function main() {
     });
   }
 
-  await tasksQueue.onIdle();
+  await queue.onIdle();
 }
 
-async function exit(error?: Error) {
+async function exit(options: { signal?: string; error?: Error; manual?: boolean }) {
   const logger = new Logger('exit');
-  tasksQueue.pause();
-
-  tasksQueue.clear();
-  await tasksQueue.onIdle();
-
-  await new Promise((resolve) => process.nextTick(resolve));
   logger.info('-');
 
-  if (error) logger.warn(error.message);
-  else logger.info('All tasks completed');
+  if (options.error) {
+    logger.warn(options.error.message);
+    process.exit(1);
+  }
 
-  logger.info('Press any key to exit');
-  process.stdin.setRawMode(true).resume();
+  if (options.signal) {
+    logger.info(`Shutdown signal: ${options.signal}`);
+    process.exit(0);
+  }
 
-  await new Promise((resolve) => process.stdin.once('data', resolve));
-  process.exit(error ? 1 : 0);
+  if (options.manual) {
+    logger.info('All tasks completed');
+    logger.info('Press any key to exit');
+
+    process.stdin.setRawMode(true).resume();
+    await new Promise((resolve) => process.stdin.once('data', resolve));
+
+    process.exit(0);
+  }
+
+  process.exit(0);
 }
 
 async function readSessions(): Promise<Session[]> {
