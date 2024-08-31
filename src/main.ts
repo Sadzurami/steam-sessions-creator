@@ -185,7 +185,7 @@ async function main() {
 
     tasksQueue.add(async () => {
       try {
-        const proxy = (app.opts().preserveProxy === true && session.Proxy) || proxies[proxyIndex++ % proxies.length];
+        const proxy = session.Proxy || proxies[proxyIndex++ % proxies.length];
         const bot = new Bot({ name: account.username, account }, proxy);
 
         await bot.start({ platform: 'web' }).finally(() => bot.stop());
