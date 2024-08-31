@@ -1,12 +1,10 @@
 # Steam Sessions Creator
 
-A simple CLI app for creating and managing steam sessions.
+Simple app for creating and updating Steam sessions (.steamsession files)
 
-## What is a steam session?
+## What is `.steamsession`
 
-All you need to know, thats steam session represents all-in-one data for manipulating with steam account.
-
-Typically, steam session contains:
+> Syntactic sugar over the various files required by [Steam](https://store.steampowered.com), placed in one file.
 
 ```json
 {
@@ -28,92 +26,83 @@ Typically, steam session contains:
 }
 ```
 
-- `Username` - steam username
-- `Password` - steam password
-- `SteamId` - steam id of account
-- `SharedSecret` - shared secret to generate 2fa codes (or null if 2fa disabled)
-- `IdentitySecret` - identity secret to generate 2fa codes (or null if 2fa disabled)
-- `WebRefreshToken` - refresh token for login via web
-- `MobileRefreshToken` - refresh token for login via mobile app
-- `DesktopRefreshToken` - refresh token for login via steam client
-- `Proxy` - proxy used for session (always null until you specify it by yourself)
-- `SchemaVersion` - schema version of steam session
+- `Username` - Steam username
+- `Password` - Steam password
+- `SteamId` - Steam account id
+- `SharedSecret` - mobile shared secret, or `null` if mobile-guard disabled
+- `IdentitySecret` - mobile identity secret, or `null` if mobile-guard disabled
+- `WebRefreshToken` - browser refresh token
+- `MobileRefreshToken` - mobile app refresh token
+- `DesktopRefreshToken` - desktop app refresh token
+- `Proxy` - assigned proxy or `null`, if `--preserve-proxy` is not used
+- `SchemaVersion` - schema version number
 
-## Installation
+## Why
 
-Download latest release from [here](https://github.com/Sadzurami/steam-sessions-creator/releases)
+- Shareable persistent authentication between independent apps
+- Self-renewal without source data
+- Useful data for most apps
 
-## Commands
+## How to start
 
-### `create` (default)
+- Download the latest [release](https://github.com/Sadzurami/steam-sessions-creator/releases#latest)
+- Put your steam accounts to `accounts.txt`
+- Put your proxies to `proxies.txt` (optional)
+- Put your secrets (mafiles) to `secrets` directory
+- Start the app
 
-Create new sessions.
+## Usage
 
-Flags:
+```txt
+$ steam-sessions-creator --help
 
-> -a --accounts
+  Usage: Steam-Sessions-Creator [options]
 
-Specify file path where accounts are stored.
-Supported formats:
+  Simple app for creating and updating Steam sessions
 
-- username:password
-- username:password:sharedSecret
+  Options:
+  -V, --version           output the version number
+  --sessions <path>       path to sessions directory (default: "./sessions")
+  --accounts <path>       path to accounts file (default: "./accounts.txt")
+  --secrets <path>        path to secrets directory (default: "./secrets")
+  --proxies <path>        path to proxies file (default: "./proxies.txt")
+  --preserve-proxy        save or use existing proxy from session
+  --force-create          create session even if it already exists
+  --force-update          update session even if not required
+  --skip-create           skip sessions creation
+  --skip-update           skip sessions update
+  --concurrency <number>  concurrency limit for global operations
+  -h, --help              display help for command
+```
 
-Default: `./accounts.txt`
+## Supported data formats
 
-> -s, --secrets
+Accounts
 
-Specify file path where secrets are stored.
-Supported formats:
+- `username:password`
+- `username:password:shared_secret`
+- `username:password:shared_secret:identity_secret`
 
-- maFile
+Proxies
 
-Default: `./secrets`
+- `http://host:port`
+- `http://username:password@host:port`
 
-> -p, --proxies
+Secrets
 
-Specify file path where proxies are stored.
-Supported formats: proto://user:pass@host:port
+- `mafile`
 
-Default: `./proxies.txt`
+## FAQ
 
-> -o, --output
+### After app start and resources loads, nothing happens
 
-Specify directory path where sessions will be stored.
+Wait a bit. Creation or update any of sessions may take 1.5 minutes.\
+Most of this time nothing happens, just waiting for long delays to prevent rate limits.
 
-Default: `./sessions`
+### How to speed up creation/update
 
-> -f, --force
+Add more proxies
 
-Force creation even if session already exists in output directory.
+### How to use the same proxy for creation and future updates
 
-> --help (-h)
-
-Show help message.
-
-### `renew`
-
-Renew sessions.
-
-Flags:
-
-> -s, --sessions
-
-Specify directory path where sessions are stored.
-
-Default: `./sessions`
-
-> -p, --proxies
-
-Specify file path where proxies are stored.
-Supported formats: proto://user:pass@host:port
-
-Default: `./proxies.txt`
-
-> -f, --force
-
-Force renew, even if session is valid and not expired yet.
-
-## Questions And Suggestions
-
-If you have any suggestions, please contact me via email [mail.to.sadzurami@gmail.com](mailto:mail.to.sadzurami@gmail.com).
+Use option `--preserve-proxy`
