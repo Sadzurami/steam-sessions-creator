@@ -101,8 +101,8 @@ Most of this time nothing happens, just waiting for long delays to prevent rate 
 
 ### How to speed up creation/update
 
-Add more proxies
+Add more proxies.
 
 ### How to use the same proxy for creation and future updates
 
-Use option `--preserve-proxy`
+Use option `--preserve-proxy`.
