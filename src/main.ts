@@ -73,7 +73,7 @@ async function main() {
   const sessions = await readSessions().then((values) => new Map(values.map((v) => [v.Username.toLowerCase(), v])));
   logger.info(`Sessions: ${sessions.size}`);
 
-  const concurrency = ~~app.opts().concurrency || proxies.values.length || 1;
+  const concurrency = ~~app.opts().concurrency || proxies.length || 1;
   logger.info(`Concurrency: ${concurrency}`);
 
   let tasksLeft = accounts.size + sessions.size;
