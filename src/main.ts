@@ -20,7 +20,7 @@ const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 
 init()
   .then(() => main())
-  .then(() => exit({ manual: true }))
+  .then(() => exit({ waitkey: true }))
   .catch((error) => exit({ error }));
 
 async function init() {
@@ -64,58 +64,38 @@ async function main() {
   const proxies = await readProxies();
   logger.info(`Proxies: ${proxies.length}`);
 
-  const secrets = await readSecrets();
-  logger.info(`Secrets: ${secrets.length}`);
+  const secrets = await readSecrets().then((values) => new Map(values.map((v) => [v.username.toLowerCase(), v])));
+  logger.info(`Secrets: ${secrets.size}`);
 
-  const accounts = await readAccounts();
-  logger.info(`Accounts: ${accounts.length}`);
+  const accounts = await readAccounts().then((values) => new Map(values.map((v) => [v.username.toLowerCase(), v])));
+  logger.info(`Accounts: ${accounts.size}`);
 
-  const sessions = await readSessions();
-  logger.info(`Sessions: ${sessions.length}`);
+  const sessions = await readSessions().then((values) => new Map(values.map((v) => [v.Username.toLowerCase(), v])));
+  logger.info(`Sessions: ${sessions.size}`);
 
-  const concurrency = ~~app.opts().concurrency || proxies.length || 1;
+  const concurrency = ~~app.opts().concurrency || proxies.values.length || 1;
   logger.info(`Concurrency: ${concurrency}`);
 
-  if (app.opts().skipCreate == true) accounts.splice(0, accounts.length);
-  if (app.opts().skipUpdate == true) sessions.splice(0, sessions.length);
-
-  if (accounts.length === 0 && sessions.length === 0) return;
+  let tasksLeft = accounts.size + sessions.size;
+  if (tasksLeft === 0) return;
 
   logger.info('-');
   logger.info('Starting tasks');
 
+  // prettier-ignore
+  const getNextProxy = ((i = 0) => () => proxies[i++ % proxies.length])();
   const queue = new PQueue({ concurrency, interval: 1, intervalCap: 1 });
 
-  const mappedAccounts = new Map(accounts.map((account) => [account.username.toLowerCase(), account]));
-  const mappedSessions = new Map(sessions.map((session) => [session.Username.toLowerCase(), session]));
-
-  let tasksLeft = accounts.length + sessions.length;
-  let proxyIndex = 0;
-
-  for (let index = 0; index < secrets.length; index++) {
-    const secret = secrets[index];
-    const accountName = secret.username.toLowerCase();
-
-    if (mappedAccounts.has(accountName)) {
-      const account = mappedAccounts.get(accountName);
-      account.sharedSecret ||= secret.sharedSecret || null;
-      account.identitySecret ||= secret.identitySecret || null;
-    }
-
-    if (mappedSessions.has(accountName)) {
-      const session = mappedSessions.get(accountName);
-      session.SharedSecret ||= secret.sharedSecret || null;
-      session.IdentitySecret ||= secret.identitySecret || null;
-    }
-  }
-
-  for (let index = 0; index < accounts.length; index++) {
-    const account = accounts[index];
-    const accountName = account.username.toLowerCase();
-
-    if (mappedSessions.has(accountName) && app.opts().forceCreate !== true) {
+  for (const [hashname, account] of app.opts().skipCreate !== true ? accounts.entries() : []) {
+    if (sessions.has(hashname) && app.opts().forceCreate !== true) {
       logger.info(`${account.username} | create | skip | left ${--tasksLeft}`);
       continue;
+    }
+
+    if (secrets.has(hashname)) {
+      const secret = secrets.get(hashname);
+      account.sharedSecret ||= secret.sharedSecret || null;
+      account.identitySecret ||= secret.identitySecret || null;
     }
 
     const session: Partial<Session> = {
@@ -133,7 +113,7 @@ async function main() {
 
     queue.add(async () => {
       try {
-        const proxy = proxies[proxyIndex++ % proxies.length];
+        const proxy = getNextProxy();
         const bot = new Bot({ name: account.username, account }, proxy);
 
         await bot.start({ platform: 'web' }).finally(() => bot.stop());
@@ -160,9 +140,7 @@ async function main() {
     });
   }
 
-  for (let index = 0; index < sessions.length; index++) {
-    const session = sessions[index] as Partial<Session>;
-
+  for (const [hashname, session] of app.opts().skipUpdate !== true ? sessions.entries() : []) {
     const sessionExpiryTime = Math.min(
       session.WebRefreshToken ? decodeRefreshToken(session.WebRefreshToken).exp * 1000 : Date.now(),
       session.MobileRefreshToken ? decodeRefreshToken(session.MobileRefreshToken).exp * 1000 : Date.now(),
@@ -174,6 +152,12 @@ async function main() {
       continue;
     }
 
+    if (secrets.has(hashname)) {
+      const secret = secrets.get(hashname);
+      session.SharedSecret ||= secret.sharedSecret || null;
+      session.IdentitySecret ||= secret.identitySecret || null;
+    }
+
     const account: Account = {
       username: session.Username,
       password: session.Password,
@@ -183,7 +167,7 @@ async function main() {
 
     queue.add(async () => {
       try {
-        const proxy = session.Proxy || proxies[proxyIndex++ % proxies.length];
+        const proxy = session.Proxy || getNextProxy();
         const bot = new Bot({ name: account.username, account }, proxy);
 
         await bot.start({ platform: 'web' }).finally(() => bot.stop());
@@ -212,33 +196,26 @@ async function main() {
   }
 
   await queue.onIdle();
+  logger.info('All tasks completed');
 }
 
-async function exit(options: { signal?: string; error?: Error; manual?: boolean }) {
+async function exit(options: { signal?: string; error?: Error; waitkey?: boolean } = {}) {
   const logger = new Logger('exit');
   logger.info('-');
 
-  if (options.error) {
-    logger.warn(options.error.message);
-    process.exit(1);
-  }
+  if (options.error) logger.warn(options.error.message);
 
-  if (options.signal) {
-    logger.info(`Shutdown signal: ${options.signal}`);
-    process.exit(0);
-  }
+  if (options.signal) logger.info(`Shutdown signal: ${options.signal}`);
 
-  if (options.manual) {
-    logger.info('All tasks completed');
+  if (options.waitkey) {
     logger.info('Press any key to exit');
-
     process.stdin.setRawMode(true).resume();
-    await new Promise((resolve) => process.stdin.once('data', resolve));
 
-    process.exit(0);
+    await new Promise((resolve) => process.stdin.once('data', resolve));
+    process.stdin.setRawMode(false).resume();
   }
 
-  process.exit(0);
+  process.exit(options.error ? 1 : 0);
 }
 
 async function readSessions(): Promise<Session[]> {
