@@ -54,7 +54,7 @@ async function init() {
   logger.info(`Version: ${appVersion}`);
 
   setProcessTitle(`${appName} v${appVersion}`);
-  closeWithGrace({ delay: false, logger: false }, ({ signal, err }) => exit({ signal, error: err }));
+  closeWithGrace({ delay: false, logger: false }, ({ signal, err: error }) => exit({ signal, error }));
 }
 
 async function main() {
