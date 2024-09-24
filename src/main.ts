@@ -59,7 +59,7 @@ async function init() {
 
 async function main() {
   const logger = new Logger('main');
-  logger.info('-');
+  logger.info('-'.repeat(40));
 
   const proxies = await readProxies();
   logger.info(`Proxies: ${proxies.length}`);
@@ -76,11 +76,12 @@ async function main() {
   const concurrency = ~~app.opts().concurrency || proxies.length || 1;
   logger.info(`Concurrency: ${concurrency}`);
 
-  let tasksLeft = accounts.size + sessions.size;
-  if (tasksLeft === 0) return;
+  const statistics = { created: 0, updated: 0, skipped: 0, errored: 0, left: accounts.size + sessions.size };
+  if (statistics.left === 0) return;
 
-  logger.info('-');
+  logger.info('-'.repeat(40));
   logger.info('Starting tasks');
+  logger.info('-'.repeat(40));
 
   // prettier-ignore
   const getNextProxy = ((i = 0) => () => proxies[i++ % proxies.length])();
@@ -88,7 +89,8 @@ async function main() {
 
   for (const [hashname, account] of app.opts().skipCreate !== true ? accounts.entries() : []) {
     if (sessions.has(hashname) && app.opts().forceCreate !== true) {
-      logger.info(`${account.username} | create | skip | left ${--tasksLeft}`);
+      logger.info(`${account.username} | skipped | left ${--statistics.left}`);
+      statistics.skipped++;
       continue;
     }
 
@@ -128,11 +130,14 @@ async function main() {
         session.SteamId = bot.steamid;
 
         await saveSession(session as Session);
-        logger.info(`${account.username} | create | success | left ${--tasksLeft}`);
+
+        logger.info(`${account.username} | created | left ${--statistics.left}`);
+        statistics.created++;
       } catch (error) {
-        logger.warn(`${account.username} | create | ${error.message.toLowerCase()} | left ${--tasksLeft}`);
+        logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
+        statistics.errored++;
       } finally {
-        if (tasksLeft > 0) await delay(30 * 1000);
+        if (statistics.left > 0) await delay(30 * 1000);
       }
     });
   }
@@ -145,7 +150,8 @@ async function main() {
     );
 
     if (sessionExpiryTime - Date.now() > sessionExpiryThreshold && app.opts().forceUpdate !== true) {
-      logger.info(`${session.Username} | update | skip | left ${--tasksLeft}`);
+      logger.info(`${session.Username} | skipped | left ${--statistics.left}`);
+      statistics.skipped++;
       continue;
     }
 
@@ -180,22 +186,33 @@ async function main() {
         session.SchemaVersion = sessionSchemaVersion;
 
         await saveSession(session as Session);
-        logger.info(`${account.username} | update | success | left ${--tasksLeft}`);
+
+        logger.info(`${account.username} | updated | left ${--statistics.left}`);
+        statistics.updated++;
       } catch (error) {
-        logger.warn(`${account.username} | update | ${error.message.toLowerCase()} | left ${--tasksLeft}`);
+        logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
+        statistics.errored++;
       } finally {
-        if (tasksLeft > 0) await delay(30 * 1000);
+        if (statistics.left > 0) await delay(30 * 1000);
       }
     });
   }
 
   await queue.onIdle();
+
+  logger.info('-'.repeat(40));
   logger.info('All tasks completed');
+  logger.info('-'.repeat(40));
+
+  logger.info(`Created: ${statistics.created}`);
+  logger.info(`Updated: ${statistics.updated}`);
+  logger.info(`Skipped: ${statistics.skipped}`);
+  logger.info(`Errored: ${statistics.errored}`);
 }
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
-  logger.info('-');
+  logger.info('-'.repeat(40));
 
   if (options.error) logger.warn(`Error: ${options.error.message}`);
 
