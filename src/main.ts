@@ -20,7 +20,7 @@ const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 
 init()
   .then(() => main())
-  .then(() => exit({ waitkey: true }))
+  .then(() => exit({}, true))
   .catch((error) => exit({ error }));
 
 async function init() {
@@ -116,16 +116,13 @@ async function main() {
         const proxy = getNextProxy();
         const bot = new Bot({ name: account.username, account }, proxy);
 
-        await bot.start({ platform: 'web' }).finally(() => bot.stop());
-        session.WebRefreshToken = bot.refreshToken;
+        session.WebRefreshToken = await bot.createRefreshToken({ platform: 'web' });
 
         await delay(30 * 1000);
-        await bot.start({ platform: 'mobile' }).finally(() => bot.stop());
-        session.MobileRefreshToken = bot.refreshToken;
+        session.MobileRefreshToken = await bot.createRefreshToken({ platform: 'mobile' });
 
         await delay(30 * 1000);
-        await bot.start({ platform: 'desktop' }).finally(() => bot.stop());
-        session.DesktopRefreshToken = bot.refreshToken;
+        session.DesktopRefreshToken = await bot.createRefreshToken({ platform: 'desktop' });
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
@@ -133,9 +130,9 @@ async function main() {
         await saveSession(session as Session);
         logger.info(`${account.username} | create | success | left ${--tasksLeft}`);
       } catch (error) {
-        logger.warn(`${account.username} | create | fail: ${error.message} | left ${--tasksLeft}`);
+        logger.warn(`${account.username} | create | ${error.message.toLowerCase()} | left ${--tasksLeft}`);
       } finally {
-        await delay(30 * 1000);
+        if (tasksLeft > 0) await delay(30 * 1000);
       }
     });
   }
@@ -170,16 +167,13 @@ async function main() {
         const proxy = session.Proxy || getNextProxy();
         const bot = new Bot({ name: account.username, account }, proxy);
 
-        await bot.start({ platform: 'web' }).finally(() => bot.stop());
-        session.WebRefreshToken = bot.refreshToken;
+        session.WebRefreshToken = await bot.createRefreshToken({ platform: 'web' });
 
         await delay(30 * 1000);
-        await bot.start({ platform: 'mobile' }).finally(() => bot.stop());
-        session.MobileRefreshToken = bot.refreshToken;
+        session.MobileRefreshToken = await bot.createRefreshToken({ platform: 'mobile' });
 
         await delay(30 * 1000);
-        await bot.start({ platform: 'desktop' }).finally(() => bot.stop());
-        session.DesktopRefreshToken = bot.refreshToken;
+        session.DesktopRefreshToken = await bot.createRefreshToken({ platform: 'desktop' });
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
@@ -188,9 +182,9 @@ async function main() {
         await saveSession(session as Session);
         logger.info(`${account.username} | update | success | left ${--tasksLeft}`);
       } catch (error) {
-        logger.warn(`${account.username} | update | fail: ${error.message} | left ${--tasksLeft}`);
+        logger.warn(`${account.username} | update | ${error.message.toLowerCase()} | left ${--tasksLeft}`);
       } finally {
-        await delay(30 * 1000);
+        if (tasksLeft > 0) await delay(30 * 1000);
       }
     });
   }
@@ -199,15 +193,15 @@ async function main() {
   logger.info('All tasks completed');
 }
 
-async function exit(options: { signal?: string; error?: Error; waitkey?: boolean } = {}) {
+async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
   logger.info('-');
 
-  if (options.error) logger.warn(options.error.message);
+  if (options.error) logger.warn(`Error: ${options.error.message}`);
 
   if (options.signal) logger.info(`Shutdown signal: ${options.signal}`);
 
-  if (options.waitkey) {
+  if (awaitKeyAction) {
     logger.info('Press any key to exit');
     process.stdin.setRawMode(true).resume();
 
@@ -225,7 +219,7 @@ async function readSessions(): Promise<Session[]> {
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
   if (paths.length === 0) return [];
 
-  paths = paths.filter((p) => p.endsWith('.steamsession')).map((p) => path.join(directory, p));
+  paths = paths.filter((path) => path.endsWith('.steamsession')).map((_path) => path.join(directory, _path));
   if (paths.length === 0) return [];
 
   const promises = paths.map((path) => fs.readFile(path, 'utf8').catch(() => ''));
@@ -278,7 +272,7 @@ async function readSecrets(): Promise<Secret[]> {
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
   if (paths.length === 0) return [];
 
-  paths = paths.filter((p) => /\.mafile$/i.test(p)).map((p) => path.join(directory, p));
+  paths = paths.filter((path) => path.toLowerCase().endsWith('.mafile')).map((_path) => path.join(directory, _path));
   if (paths.length === 0) return [];
 
   const promises = paths.map(async (path) => ({ content: await fs.readFile(path, 'utf8').catch(() => ''), path }));
