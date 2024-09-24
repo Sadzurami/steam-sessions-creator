@@ -117,8 +117,8 @@ async function main() {
   logger.info(`Skip accounts: ${skippedAccounts}`);
   logger.info(`Skip sessions: ${skippedSessions}`);
 
-  const statistics = { created: 0, updated: 0, skipped: 0, errored: 0, left: accounts.size + sessions.size };
-  if (statistics.left === 0) return;
+  if (accounts.size + sessions.size === 0) return;
+  const statistics = { created: 0, updated: 0, errored: 0, left: accounts.size + sessions.size };
 
   logger.info('-'.repeat(40));
   logger.info('Starting tasks');
@@ -229,7 +229,6 @@ async function main() {
 
   logger.info(`Created: ${statistics.created}`);
   logger.info(`Updated: ${statistics.updated}`);
-  logger.info(`Skipped: ${statistics.skipped}`);
   logger.info(`Errored: ${statistics.errored}`);
 }
 
