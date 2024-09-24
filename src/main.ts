@@ -76,6 +76,47 @@ async function main() {
   const concurrency = ~~app.opts().concurrency || proxies.length || 1;
   logger.info(`Concurrency: ${concurrency}`);
 
+  logger.info('-'.repeat(40));
+  let skippedAccounts: number = 0;
+  let skippedSessions: number = 0;
+
+  for (const [hashname] of accounts.entries()) {
+    if (app.opts().skipCreate === true) {
+      accounts.delete(hashname);
+      skippedAccounts++;
+      continue;
+    }
+
+    if (sessions.has(hashname) && app.opts().forceCreate !== true) {
+      accounts.delete(hashname);
+      skippedAccounts++;
+      continue;
+    }
+  }
+
+  for (const [hashname, session] of sessions.entries()) {
+    if (app.opts().skipUpdate === true) {
+      sessions.delete(hashname);
+      skippedSessions++;
+      continue;
+    }
+
+    const sessionExpiryTime = Math.min(
+      session.WebRefreshToken ? decodeRefreshToken(session.WebRefreshToken).exp * 1000 : Date.now(),
+      session.MobileRefreshToken ? decodeRefreshToken(session.MobileRefreshToken).exp * 1000 : Date.now(),
+      session.DesktopRefreshToken ? decodeRefreshToken(session.DesktopRefreshToken).exp * 1000 : Date.now(),
+    );
+
+    if (sessionExpiryTime - Date.now() > sessionExpiryThreshold && app.opts().forceUpdate !== true) {
+      sessions.delete(hashname);
+      skippedSessions++;
+      continue;
+    }
+  }
+
+  logger.info(`Skip accounts: ${skippedAccounts}`);
+  logger.info(`Skip sessions: ${skippedSessions}`);
+
   const statistics = { created: 0, updated: 0, skipped: 0, errored: 0, left: accounts.size + sessions.size };
   if (statistics.left === 0) return;
 
@@ -87,13 +128,7 @@ async function main() {
   const getNextProxy = ((i = 0) => () => proxies[i++ % proxies.length])();
   const queue = new PQueue({ concurrency, interval: 1, intervalCap: 1 });
 
-  for (const [hashname, account] of app.opts().skipCreate !== true ? accounts.entries() : []) {
-    if (sessions.has(hashname) && app.opts().forceCreate !== true) {
-      logger.info(`${account.username} | skipped | left ${--statistics.left}`);
-      statistics.skipped++;
-      continue;
-    }
-
+  for (const [hashname, account] of accounts.entries()) {
     if (secrets.has(hashname)) {
       const secret = secrets.get(hashname);
       account.sharedSecret ||= secret.sharedSecret || null;
@@ -142,19 +177,7 @@ async function main() {
     });
   }
 
-  for (const [hashname, session] of app.opts().skipUpdate !== true ? sessions.entries() : []) {
-    const sessionExpiryTime = Math.min(
-      session.WebRefreshToken ? decodeRefreshToken(session.WebRefreshToken).exp * 1000 : Date.now(),
-      session.MobileRefreshToken ? decodeRefreshToken(session.MobileRefreshToken).exp * 1000 : Date.now(),
-      session.DesktopRefreshToken ? decodeRefreshToken(session.DesktopRefreshToken).exp * 1000 : Date.now(),
-    );
-
-    if (sessionExpiryTime - Date.now() > sessionExpiryThreshold && app.opts().forceUpdate !== true) {
-      logger.info(`${session.Username} | skipped | left ${--statistics.left}`);
-      statistics.skipped++;
-      continue;
-    }
-
+  for (const [hashname, session] of sessions.entries()) {
     if (secrets.has(hashname)) {
       const secret = secrets.get(hashname);
       session.SharedSecret ||= secret.sharedSecret || null;
