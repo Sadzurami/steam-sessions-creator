@@ -107,7 +107,9 @@ async function main() {
       session.DesktopRefreshToken ? decodeRefreshToken(session.DesktopRefreshToken).exp * 1000 : Date.now(),
     );
 
-    if (sessionExpiryTime - Date.now() > sessionExpiryThreshold && app.opts().forceUpdate !== true) {
+    const sessionExpired = sessionExpiryTime - Date.now() < sessionExpiryThreshold;
+
+    if (!sessionExpired && app.opts().forceUpdate !== true) {
       sessions.delete(hashname);
       skippedSessions++;
       continue;
