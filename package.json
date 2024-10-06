@@ -12,8 +12,8 @@
     "node": ">=18"
   },
   "bin": "dist/main.js",
-  "main": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "scripts": {
     "build": "del-cli dist && tsc",
     "build:package": "del-cli package && npm run build && pkg package.json --compress GZip",
@@ -32,11 +32,11 @@
     "hpagent": "^1.2.0",
     "p-queue": "^6",
     "read-pkg-up": "^7",
-    "steam-session": "^1.7.2",
+    "steam-session": "^1.9.0",
     "steam-totp": "^2.1.2"
   },
   "devDependencies": {
-    "@sadzurami/eslint-config": "^1.0.0",
+    "@sadzurami/eslint-config": "^1.0.1",
     "@sadzurami/prettier-config": "^1.0.0",
     "@sadzurami/ts-config": "^1.0.0",
     "@types/fs-extra": "^11.0.4",
