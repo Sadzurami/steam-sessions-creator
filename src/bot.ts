@@ -7,6 +7,7 @@ import {
 } from 'steam-session/dist/interfaces-external';
 import SteamTotp from 'steam-totp';
 
+import { createMachineName } from './helpers';
 import { Account } from './interfaces/account.interface';
 
 export class Bot {
@@ -26,9 +27,12 @@ export class Bot {
   }
 
   public async createRefreshToken(details: { platform: 'web' | 'desktop' | 'mobile' }) {
-    const options: LoginSessionOptions = { agent: this.httpAgent };
+    const credentials: Credentials = { accountName: this.account.username, password: this.account.password };
+    if (this.account.sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(this.account.sharedSecret);
 
     let platform: EAuthTokenPlatformType;
+    const options: LoginSessionOptions = { agent: this.httpAgent };
+
     switch (details.platform) {
       case 'web':
         platform = EAuthTokenPlatformType.WebBrowser;
@@ -37,16 +41,14 @@ export class Bot {
         platform = EAuthTokenPlatformType.MobileApp;
         break;
       case 'desktop':
-        options.machineId = true;
         platform = EAuthTokenPlatformType.SteamClient;
+        options.machineId = true;
+        options.machineFriendlyName = createMachineName(credentials.accountName);
         break;
     }
 
     const session = new LoginSession(platform, options);
     session.on('error', () => {});
-
-    const credentials: Credentials = { accountName: this.account.username, password: this.account.password };
-    if (this.account.sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(this.account.sharedSecret);
 
     try {
       await new Promise<void>((resolve, reject) => {
