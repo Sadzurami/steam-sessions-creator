@@ -365,10 +365,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@sadzurami/eslint-config@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@sadzurami/eslint-config/-/eslint-config-1.0.0.tgz#f9e80a4715cbf5971ffb048cdb26805f1b4225be"
-  integrity sha512-lvW+cWfvtN9xFU5y/8kuNxeTRuZpHvNXG5VSC2w57MslRcDOHxxsEQA5EYKMrQbPXgOiffssYQ3Pgmc1r+iy/g==
+"@sadzurami/eslint-config@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@sadzurami/eslint-config/-/eslint-config-1.0.1.tgz#6359162420862e36911f431231088fbe220a6e9a"
+  integrity sha512-cMVQ9ZiUMIVdwGzyFnEYIQzOTCwsJMRMH0/T1faKsvyFtGNVA1bzzAqFgqCA8CYtu0BMVaKFKYPf3PEmTFSmiQ==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^7.18.0"
     "@typescript-eslint/parser" "^7.18.0"
@@ -2219,10 +2219,10 @@ spdx-license-ids@^3.0.0:
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.20.tgz#e44ed19ed318dd1e5888f93325cee800f0f51b89"
   integrity sha512-jg25NiDV/1fLtSgEgyvVyDunvaNHbuwF9lfNV17gSmPFAlYzdfNBlLtLzXTevwkPj7DhGbmN9VnmJIgLnhvaBw==
 
-steam-session@^1.7.2:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.7.2.tgz#db94cb0eabe1e0330cbbf623f336757abc810aaf"
-  integrity sha512-BfOhwKqrzuiX9xeZ0X9IUhd3cwsZYzfGSkk51Oah7FM7JqDCDlcMrdv/1Q+YT7pBWpPCnnrncVkxiZ5mrRToCg==
+steam-session@^1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.9.0.tgz#a0c511dfbdad0ca8225cd809130504cbfed15e59"
+  integrity sha512-CsCxy2ln70/LrRcho8nbixTLT2RMswqt/kzUualZYeT7DkTUF7nni8G/f1tBdT6ce2lKzl4Hq5xJlQ8C6rxg9A==
   dependencies:
     "@doctormckay/stdlib" "^2.9.0"
     "@doctormckay/user-agents" "^1.0.0"
