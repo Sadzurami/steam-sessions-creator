@@ -69,6 +69,7 @@ export class Bot {
       throw error;
     } finally {
       session.cancelLoginAttempt();
+      this.httpAgent.destroy();
     }
 
     this.steamid = session.steamID.toString();
