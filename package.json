@@ -42,12 +42,12 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^18",
     "@types/steam-totp": "^2.1.2",
-    "del-cli": "^5.1.0",
+    "del-cli": "^6.0.0",
     "eslint": "^8",
     "pkg": "^5.8.1",
     "prettier": "^3.3.3",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.3"
   },
   "pkg": {
     "scripts": [
