@@ -21,7 +21,7 @@ const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 init()
   .then(() => main())
   .then(() => exit({}, true))
-  .catch((error) => exit({ error }));
+  .catch((error) => exit({ error }, true));
 
 async function init() {
   const logger = new Logger('init');
@@ -54,7 +54,7 @@ async function init() {
   logger.info(`Version: ${appVersion}`);
 
   setProcessTitle(`${appName} v${appVersion}`);
-  closeWithGrace({ delay: false, logger: false }, ({ signal, err: error }) => exit({ signal, error }));
+  closeWithGrace({ delay: false, logger: false }, ({ signal, err: error }) => exit({ signal, error }, !signal));
 }
 
 async function main() {
@@ -260,27 +260,31 @@ async function readSessions(): Promise<Session[]> {
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
   if (paths.length === 0) return [];
 
-  paths = paths.filter((path) => path.endsWith('.steamsession')).map((_path) => path.join(directory, _path));
+  paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(directory, file));
   if (paths.length === 0) return [];
 
-  const promises = paths.map((path) => fs.readFile(path, 'utf8').catch(() => ''));
   const sessions = new Map<string, Session>();
+  const queue = new PQueue({ concurrency: 512 });
 
-  for await (const content of promises) {
-    let session: Session;
+  paths.forEach((file) => {
+    queue.add(async () => {
+      let session: Session;
 
-    try {
-      session = JSON.parse(content) as Session;
-    } catch (error) {
-      continue;
-    }
+      try {
+        const content = await fs.readFile(file, 'utf8').catch(() => '');
+        session = JSON.parse(content) as Session;
+      } catch (error) {
+        return;
+      }
 
-    if (typeof session !== 'object') continue;
-    if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 2) continue;
+      if (typeof session !== 'object') return;
+      if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 2) return;
 
-    sessions.set(session.Username.toLowerCase(), session);
-  }
+      sessions.set(session.Username.toLowerCase(), session);
+    });
+  });
 
+  await queue.onIdle();
   return [...sessions.values()];
 }
 
@@ -313,35 +317,39 @@ async function readSecrets(): Promise<Secret[]> {
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
   if (paths.length === 0) return [];
 
-  paths = paths.filter((path) => path.toLowerCase().endsWith('.mafile')).map((_path) => path.join(directory, _path));
+  paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(directory, file));
   if (paths.length === 0) return [];
 
-  const promises = paths.map(async (path) => ({ content: await fs.readFile(path, 'utf8').catch(() => ''), path }));
   const secrets = new Map<string, Secret>();
+  const queue = new PQueue({ concurrency: 512 });
 
-  for await (const file of promises) {
-    if (!file.content) continue;
-    file.content = file.content.replace(/},\s*}/g, '}}').replace(/'/g, '"');
+  paths.forEach((file) => {
+    queue.add(async () => {
+      let mafile: Record<string, any>;
 
-    let json: Record<string, any>;
-    try {
-      json = JSON.parse(file.content);
-    } catch (error) {
-      continue;
-    }
+      try {
+        let content = await fs.readFile(file, 'utf8').catch(() => '');
+        content = content.replace(/},\s*}/g, '}}').replace(/'/g, '"');
 
-    if (typeof json !== 'object') continue;
-    if (!json.shared_secret || !json.identity_secret) continue;
+        mafile = JSON.parse(content);
+      } catch (error) {
+        return;
+      }
 
-    const secret: Secret = {
-      username: json.account_name || path.basename(file.path).replace(/\.mafile$/i, ''),
-      sharedSecret: json.shared_secret,
-      identitySecret: json.identity_secret,
-    };
+      if (typeof mafile !== 'object') return;
+      if (!mafile.shared_secret || !mafile.identity_secret) return;
 
-    secrets.set(secret.username.toLowerCase(), secret);
-  }
+      const secret: Secret = {
+        username: mafile.account_name || path.basename(file).replace(/\.mafile$/i, ''),
+        sharedSecret: mafile.shared_secret,
+        identitySecret: mafile.identity_secret,
+      };
 
+      secrets.set(secret.username.toLowerCase(), secret);
+    });
+  });
+
+  await queue.onIdle();
   return [...secrets.values()];
 }
 
