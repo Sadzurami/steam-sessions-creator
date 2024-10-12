@@ -134,18 +134,12 @@ async function main() {
   queues.push(queue);
 
   for (const [hashname, account] of accounts.entries()) {
-    if (secrets.has(hashname)) {
-      const secret = secrets.get(hashname);
-      account.sharedSecret ||= secret.sharedSecret || null;
-      account.identitySecret ||= secret.identitySecret || null;
-    }
-
     const session: Partial<Session> = {
       Username: account.username,
       Password: account.password,
       SteamId: undefined,
-      SharedSecret: account.sharedSecret,
-      IdentitySecret: account.identitySecret,
+      SharedSecret: account.sharedSecret || secrets.get(hashname)?.sharedSecret || null,
+      IdentitySecret: account.identitySecret || secrets.get(hashname)?.identitySecret || null,
       WebRefreshToken: undefined,
       MobileRefreshToken: undefined,
       DesktopRefreshToken: undefined,
@@ -183,11 +177,8 @@ async function main() {
   }
 
   for (const [hashname, session] of sessions.entries()) {
-    if (secrets.has(hashname)) {
-      const secret = secrets.get(hashname);
-      session.SharedSecret ||= secret.sharedSecret || null;
-      session.IdentitySecret ||= secret.identitySecret || null;
-    }
+    session.SharedSecret = session.SharedSecret || secrets.get(hashname)?.sharedSecret || null;
+    session.IdentitySecret = session.IdentitySecret || secrets.get(hashname)?.identitySecret || null;
 
     const account: Account = {
       username: session.Username,
