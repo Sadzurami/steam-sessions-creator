@@ -76,10 +76,7 @@ async function main() {
   const concurrency = ~~app.opts().concurrency || proxies.length || 1;
   logger.info(`Concurrency: ${concurrency}`);
 
-  logger.info('-'.repeat(40));
   let skippedAccounts: number = 0;
-  let skippedSessions: number = 0;
-
   for (const [hashname] of accounts.entries()) {
     if (app.opts().skipCreate === true) {
       accounts.delete(hashname);
@@ -94,6 +91,7 @@ async function main() {
     }
   }
 
+  let skippedSessions: number = 0;
   for (const [hashname, session] of sessions.entries()) {
     if (app.opts().skipUpdate === true) {
       sessions.delete(hashname);
@@ -116,11 +114,12 @@ async function main() {
     }
   }
 
+  logger.info('-'.repeat(40));
   logger.info(`Skip accounts: ${skippedAccounts}`);
   logger.info(`Skip sessions: ${skippedSessions}`);
 
-  if (accounts.size + sessions.size === 0) return;
   const statistics = { created: 0, updated: 0, errored: 0, left: accounts.size + sessions.size };
+  if (statistics.left === 0) return;
 
   logger.info('-'.repeat(40));
   logger.info('Starting tasks');
