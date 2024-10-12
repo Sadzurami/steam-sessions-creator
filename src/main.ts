@@ -239,6 +239,7 @@ async function main() {
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
+  queues.forEach((queue) => queue.pause());
 
   queues.forEach((queue) => queue.clear());
   await Promise.all(queues.map((queue) => queue.onIdle()));
