@@ -177,7 +177,7 @@ async function main() {
         logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
         statistics.errored++;
       } finally {
-        if (statistics.left > 0) await delay(30 * 1000);
+        if (statistics.left > 0 && queue.size > 0) await delay(30 * 1000);
       }
     });
   }
@@ -221,7 +221,7 @@ async function main() {
         logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
         statistics.errored++;
       } finally {
-        if (statistics.left > 0) await delay(30 * 1000);
+        if (statistics.left > 0 && queue.size > 0) await delay(30 * 1000);
       }
     });
   }
@@ -239,10 +239,12 @@ async function main() {
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
-  logger.info('-'.repeat(40));
 
   queues.forEach((queue) => queue.clear());
+  await Promise.all(queues.map((queue) => queue.onIdle()));
+
   await new Promise((resolve) => process.nextTick(resolve));
+  logger.info('-'.repeat(40));
 
   if (options.error) logger.warn(`Error: ${options.error.message}`);
 
