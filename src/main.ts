@@ -18,6 +18,8 @@ import { Session } from './interfaces/session.interface';
 const sessionSchemaVersion = 3;
 const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 
+const queues: PQueue[] = [];
+
 init()
   .then(() => main())
   .then(() => exit({}, true))
@@ -127,7 +129,9 @@ async function main() {
 
   // prettier-ignore
   const getNextProxy = ((i = 0) => () => proxies[i++ % proxies.length])();
+
   const queue = new PQueue({ concurrency, interval: 1, intervalCap: 1 });
+  queues.push(queue);
 
   for (const [hashname, account] of accounts.entries()) {
     if (secrets.has(hashname)) {
@@ -236,6 +240,9 @@ async function main() {
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
   logger.info('-'.repeat(40));
+
+  queues.forEach((queue) => queue.clear());
+  await new Promise((resolve) => process.nextTick(resolve));
 
   if (options.error) logger.warn(`Error: ${options.error.message}`);
 
