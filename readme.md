@@ -71,6 +71,7 @@ $ steam-sessions-creator --help
   --force-update          update session even if not required
   --skip-create           skip sessions creation
   --skip-update           skip sessions update
+  --silent-exit           exit process automatically on finish
   --concurrency <number>  concurrency limit for global operations
   -h, --help              display help for command
 ```

@@ -22,7 +22,7 @@ const queues: PQueue[] = [];
 
 init()
   .then(() => main())
-  .then(() => exit({}, true))
+  .then(() => exit({}, app.opts().silentExit !== true))
   .catch((error) => exit({ error }, true));
 
 async function init() {
@@ -49,6 +49,7 @@ async function init() {
     .option('--force-update', 'update session even if not required')
     .option('--skip-create', 'skip sessions creation')
     .option('--skip-update', 'skip sessions update')
+    .option('--silent-exit', 'exit process automatically on finish')
     .option('--concurrency <number>', 'concurrency limit for global operations')
     .parseAsync();
 
