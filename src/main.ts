@@ -10,13 +10,11 @@ import { setTimeout as delay } from 'timers/promises';
 import { Logger } from '@sadzurami/logger';
 
 import { Bot } from './bot';
+import { SESSION_EXPIRY_THRESHOLD, SESSION_SCHEMA_VERSION } from './constants';
 import { decodeRefreshToken } from './helpers';
 import { Account } from './interfaces/account.interface';
 import { Secret } from './interfaces/secret.interface';
 import { Session } from './interfaces/session.interface';
-
-const sessionSchemaVersion = 3;
-const sessionExpiryThreshold = 60 * 60 * 24 * 30 * 1000;
 
 const queues: PQueue[] = [];
 
@@ -108,7 +106,7 @@ async function main() {
       session.DesktopRefreshToken ? decodeRefreshToken(session.DesktopRefreshToken).exp * 1000 : Date.now(),
     );
 
-    const sessionExpired = sessionExpiryTime - Date.now() < sessionExpiryThreshold;
+    const sessionExpired = sessionExpiryTime - Date.now() < SESSION_EXPIRY_THRESHOLD;
 
     if (!sessionExpired && app.opts().forceUpdate !== true) {
       sessions.delete(hashname);
@@ -145,7 +143,7 @@ async function main() {
       MobileRefreshToken: undefined,
       DesktopRefreshToken: undefined,
       Proxy: null,
-      SchemaVersion: sessionSchemaVersion,
+      SchemaVersion: SESSION_SCHEMA_VERSION,
     };
 
     queue.add(async () => {
@@ -203,7 +201,7 @@ async function main() {
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
-        session.SchemaVersion = sessionSchemaVersion;
+        session.SchemaVersion = SESSION_SCHEMA_VERSION;
 
         await saveSession(session as Session);
 
