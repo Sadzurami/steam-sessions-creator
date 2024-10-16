@@ -229,12 +229,16 @@ async function main() {
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
   const logger = new Logger('exit');
+  const promises: Promise<any>[] = [];
 
-  queues.forEach((queue) => queue.pause());
-  queues.forEach((queue) => queue.clear());
-  await Promise.all(queues.map((queue) => queue.onIdle()));
+  for (const queue of queues) {
+    queue.pause();
+    queue.clear();
 
-  await new Promise((resolve) => process.nextTick(resolve));
+    promises.push(queue.onIdle());
+  }
+
+  await Promise.all(promises).then(() => new Promise((resolve) => process.nextTick(resolve)));
   logger.info('-'.repeat(40));
 
   if (options.error) logger.warn(`Error: ${options.error.message}`);
