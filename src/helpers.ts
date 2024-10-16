@@ -104,6 +104,7 @@ export async function readProxies(file: string): Promise<string[]> {
   await fs.ensureFile(file);
   const content = await fs.readFile(file, 'utf-8').catch(() => '');
 
+  if (content.length === 0) return [];
   const proxies: Set<string> = new Set();
 
   for (const line of content.split(/\r?\n/)) {
