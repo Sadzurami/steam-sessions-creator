@@ -151,11 +151,11 @@ async function main() {
         const bot = new Bot({ name: account.username, account }, proxy);
 
         session.WebRefreshToken = await bot.createRefreshToken({ platform: 'web' });
-
         await delay(30 * 1000);
+
         session.MobileRefreshToken = await bot.createRefreshToken({ platform: 'mobile' });
-
         await delay(30 * 1000);
+
         session.DesktopRefreshToken = await bot.createRefreshToken({ platform: 'desktop' });
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
@@ -191,11 +191,11 @@ async function main() {
         const bot = new Bot({ name: account.username, account }, proxy);
 
         session.WebRefreshToken = await bot.createRefreshToken({ platform: 'web' });
-
         await delay(30 * 1000);
+
         session.MobileRefreshToken = await bot.createRefreshToken({ platform: 'mobile' });
-
         await delay(30 * 1000);
+
         session.DesktopRefreshToken = await bot.createRefreshToken({ platform: 'desktop' });
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
