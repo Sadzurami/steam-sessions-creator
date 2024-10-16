@@ -1,7 +1,6 @@
 import closeWithGrace from 'close-with-grace';
 import { program as app } from 'commander';
 import setProcessTitle from 'console-title';
-import fs from 'fs-extra';
 import PQueue from 'p-queue';
 import path from 'path';
 import readPackageJson from 'read-pkg-up';
@@ -11,9 +10,8 @@ import { Logger } from '@sadzurami/logger';
 
 import { Bot } from './bot';
 import { SESSION_EXPIRY_THRESHOLD, SESSION_SCHEMA_VERSION } from './constants';
-import { decodeRefreshToken } from './helpers';
+import { decodeRefreshToken, readAccounts, readProxies, readSecrets, readSessions, saveSession } from './helpers';
 import { Account } from './interfaces/account.interface';
-import { Secret } from './interfaces/secret.interface';
 import { Session } from './interfaces/session.interface';
 
 const queues: PQueue[] = [];
@@ -62,16 +60,17 @@ async function main() {
   const logger = new Logger('main');
   logger.info('-'.repeat(40));
 
-  const proxies = await readProxies();
+  const proxies = await readProxies(path.resolve(app.opts().proxies)).then((proxies) => [...proxies.values()]);
   logger.info(`Proxies: ${proxies.length}`);
 
-  const secrets = await readSecrets().then((values) => new Map(values.map((v) => [v.username.toLowerCase(), v])));
+  const secrets = await readSecrets(path.resolve(app.opts().secrets));
   logger.info(`Secrets: ${secrets.size}`);
 
-  const accounts = await readAccounts().then((values) => new Map(values.map((v) => [v.username.toLowerCase(), v])));
+  const accounts = await readAccounts(path.resolve(app.opts().accounts));
   logger.info(`Accounts: ${accounts.size}`);
 
-  const sessions = await readSessions().then((values) => new Map(values.map((v) => [v.Username.toLowerCase(), v])));
+  const sessionsDirectory = path.resolve(app.opts().sessions);
+  const sessions = await readSessions(sessionsDirectory);
   logger.info(`Sessions: ${sessions.size}`);
 
   const concurrency = ~~app.opts().concurrency || proxies.length || 1;
@@ -119,8 +118,8 @@ async function main() {
   logger.info(`Skip accounts: ${skippedAccounts}`);
   logger.info(`Skip sessions: ${skippedSessions}`);
 
+  if (accounts.size === 0 && sessions.size === 0) return;
   const statistics = { created: 0, updated: 0, errored: 0, left: accounts.size + sessions.size };
-  if (statistics.left === 0) return;
 
   logger.info('-'.repeat(40));
   logger.info('Starting tasks');
@@ -162,7 +161,7 @@ async function main() {
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
 
-        await saveSession(session as Session);
+        await saveSession(sessionsDirectory, session as Session);
 
         logger.info(`${account.username} | created | left ${--statistics.left}`);
         statistics.created++;
@@ -203,7 +202,7 @@ async function main() {
         session.SteamId = bot.steamid;
         session.SchemaVersion = SESSION_SCHEMA_VERSION;
 
-        await saveSession(session as Session);
+        await saveSession(sessionsDirectory, session as Session);
 
         logger.info(`${account.username} | updated | left ${--statistics.left}`);
         statistics.updated++;
@@ -254,134 +253,4 @@ async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAc
   }
 
   process.exit(options.error ? 1 : 0);
-}
-
-async function readSessions(): Promise<Session[]> {
-  const directory = path.resolve(app.opts().sessions);
-  await fs.ensureDir(directory);
-
-  let paths = await fs.readdir(directory).catch(() => [] as string[]);
-  if (paths.length === 0) return [];
-
-  paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(directory, file));
-  if (paths.length === 0) return [];
-
-  const sessions = new Map<string, Session>();
-  const queue = new PQueue({ concurrency: 512 });
-
-  paths.forEach((file) => {
-    queue.add(async () => {
-      let session: Session;
-
-      try {
-        const content = await fs.readFile(file, 'utf8').catch(() => '');
-        session = JSON.parse(content) as Session;
-      } catch (error) {
-        return;
-      }
-
-      if (typeof session !== 'object') return;
-      if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 2) return;
-
-      sessions.set(session.Username.toLowerCase(), session);
-    });
-  });
-
-  await queue.onIdle();
-  return [...sessions.values()];
-}
-
-async function readAccounts(): Promise<Account[]> {
-  const file = path.resolve(app.opts().accounts);
-  await fs.ensureFile(file);
-
-  const content = await fs.readFile(file, 'utf-8').catch(() => '');
-  const accounts = new Map<string, Account>();
-
-  for (const line of content.split(/\r?\n/)) {
-    const parts = line.split(':');
-
-    if (!parts[0] || !parts[1]) continue;
-    const account: Account = { username: parts[0], password: parts[1], sharedSecret: null, identitySecret: null };
-
-    if (parts[2] && Buffer.from(parts[2], 'base64').toString('base64') === parts[2]) account.sharedSecret = parts[2];
-    if (parts[3] && Buffer.from(parts[3], 'base64').toString('base64') === parts[3]) account.identitySecret = parts[3];
-
-    accounts.set(account.username.toLowerCase(), account);
-  }
-
-  return [...accounts.values()];
-}
-
-async function readSecrets(): Promise<Secret[]> {
-  const directory = path.resolve(app.opts().secrets);
-  await fs.ensureDir(directory);
-
-  let paths = await fs.readdir(directory).catch(() => [] as string[]);
-  if (paths.length === 0) return [];
-
-  paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(directory, file));
-  if (paths.length === 0) return [];
-
-  const secrets = new Map<string, Secret>();
-  const queue = new PQueue({ concurrency: 512 });
-
-  paths.forEach((file) => {
-    queue.add(async () => {
-      let mafile: Record<string, any>;
-
-      try {
-        let content = await fs.readFile(file, 'utf8').catch(() => '');
-        content = content.replace(/},\s*}/g, '}}').replace(/'/g, '"');
-
-        mafile = JSON.parse(content);
-      } catch (error) {
-        return;
-      }
-
-      if (typeof mafile !== 'object') return;
-      if (!mafile.shared_secret || !mafile.identity_secret) return;
-
-      const secret: Secret = {
-        username: mafile.account_name || path.basename(file).replace(/\.mafile$/i, ''),
-        sharedSecret: mafile.shared_secret,
-        identitySecret: mafile.identity_secret,
-      };
-
-      secrets.set(secret.username.toLowerCase(), secret);
-    });
-  });
-
-  await queue.onIdle();
-  return [...secrets.values()];
-}
-
-async function readProxies(): Promise<string[]> {
-  const file = path.resolve(app.opts().proxies);
-  await fs.ensureFile(file);
-
-  const content = await fs.readFile(file, 'utf-8').catch(() => '');
-  const proxies = new Set<string>();
-
-  for (const line of content.split(/\r?\n/)) {
-    let proxy: string;
-
-    try {
-      proxy = new URL(line.trim()).toString().slice(0, -1);
-    } catch (error) {
-      continue;
-    }
-
-    proxies.add(proxy);
-  }
-
-  return [...proxies];
-}
-
-async function saveSession(session: Session) {
-  const directory = path.resolve(app.opts().sessions);
-  const file = path.resolve(directory, `${session.Username}.steamsession`);
-
-  const content = JSON.stringify(session, null, 2);
-  await fs.writeFile(file, content);
 }

@@ -1,5 +1,133 @@
 import { createHash } from 'crypto';
+import fs from 'fs-extra';
 import { hostname } from 'os';
+import PQueue from 'p-queue';
+import path from 'path';
+
+import { Account } from './interfaces/account.interface';
+import { Secret } from './interfaces/secret.interface';
+import { Session } from './interfaces/session.interface';
+
+export async function readSessions(directory: string): Promise<Map<string, Session>> {
+  const sessions: Map<string, Session> = new Map();
+  await fs.ensureDir(directory);
+
+  let paths = await fs.readdir(directory).catch(() => [] as string[]);
+  if (paths.length === 0) return sessions;
+
+  paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(directory, file));
+  if (paths.length === 0) return sessions;
+
+  const queue = new PQueue({ concurrency: 512 });
+  await queue.addAll(
+    paths.map((file) => async () => {
+      let session: Session;
+
+      try {
+        const content = await fs.readFile(file, 'utf8').catch(() => '');
+        session = JSON.parse(content) as Session;
+      } catch (error) {
+        return;
+      }
+
+      if (typeof session !== 'object') return;
+      if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 2) return;
+
+      sessions.set(session.Username.toLowerCase(), session);
+    }),
+  );
+
+  return sessions;
+}
+
+export async function readAccounts(file: string): Promise<Map<string, Account>> {
+  const accounts: Map<string, Account> = new Map();
+  await fs.ensureFile(file);
+
+  const content = await fs.readFile(file, 'utf-8').catch(() => '');
+  if (content.length === 0) return accounts;
+
+  for (const line of content.split(/\r?\n/)) {
+    const parts = line.split(':');
+
+    if (!parts[0] || !parts[1]) continue;
+    const account: Account = { username: parts[0], password: parts[1], sharedSecret: null, identitySecret: null };
+
+    if (parts[2] && Buffer.from(parts[2], 'base64').toString('base64') === parts[2]) account.sharedSecret = parts[2];
+    if (parts[3] && Buffer.from(parts[3], 'base64').toString('base64') === parts[3]) account.identitySecret = parts[3];
+
+    accounts.set(account.username.toLowerCase(), account);
+  }
+
+  return accounts;
+}
+
+export async function readSecrets(directory: string): Promise<Map<string, Secret>> {
+  const secrets: Map<string, Secret> = new Map();
+  await fs.ensureDir(directory);
+
+  let paths = await fs.readdir(directory).catch(() => [] as string[]);
+  if (paths.length === 0) return secrets;
+
+  paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(directory, file));
+  if (paths.length === 0) return secrets;
+
+  const queue = new PQueue({ concurrency: 512 });
+  await queue.addAll(
+    paths.map((file) => async () => {
+      let mafile: Record<string, any>;
+
+      try {
+        let content = await fs.readFile(file, 'utf8').catch(() => '');
+        content = content.replace(/},\s*}/g, '}}').replace(/'/g, '"');
+
+        mafile = JSON.parse(content) as Record<string, any>;
+      } catch (error) {
+        return;
+      }
+
+      if (typeof mafile !== 'object') return;
+      if (!mafile.shared_secret || !mafile.identity_secret) return;
+
+      const secret: Secret = {
+        username: mafile.account_name || path.basename(file).replace(/\.mafile$/i, ''),
+        sharedSecret: mafile.shared_secret,
+        identitySecret: mafile.identity_secret,
+      };
+
+      secrets.set(secret.username.toLowerCase(), secret);
+    }),
+  );
+
+  return secrets;
+}
+
+export async function readProxies(file: string): Promise<Set<string>> {
+  const proxies: Set<string> = new Set();
+  await fs.ensureFile(file);
+
+  const content = await fs.readFile(file, 'utf-8').catch(() => '');
+  if (content.length === 0) return proxies;
+
+  for (const line of content.split(/\r?\n/)) {
+    let proxy: string;
+
+    try {
+      proxy = new URL(line.trim()).toString().slice(0, -1);
+    } catch (error) {
+      continue;
+    }
+
+    proxies.add(proxy);
+  }
+
+  return proxies;
+}
+
+export async function saveSession(directory: string, session: Session) {
+  const file = path.resolve(directory, `${session.Username}.steamsession`);
+  await fs.writeFile(file, JSON.stringify(session, null, 2));
+}
 
 export function decodeRefreshToken(token: string) {
   try {

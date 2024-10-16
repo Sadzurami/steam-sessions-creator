@@ -62,8 +62,8 @@ export class Bot {
           })
           .catch(reject);
 
-        session.once('error', reject);
         session.once('timeout', () => reject(new Error('Login attempt timed out')));
+        session.once('error', (error) => reject(new Error(`Login attempt failed: ${error.message}`, { cause: error })));
       });
     } catch (error) {
       throw error;
