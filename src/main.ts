@@ -175,8 +175,8 @@ async function main() {
   }
 
   for (const [hashname, session] of sessions.entries()) {
-    session.SharedSecret = session.SharedSecret || secrets.get(hashname)?.sharedSecret || null;
-    session.IdentitySecret = session.IdentitySecret || secrets.get(hashname)?.identitySecret || null;
+    session.SharedSecret ||= secrets.get(hashname)?.sharedSecret || null;
+    session.IdentitySecret ||= secrets.get(hashname)?.identitySecret || null;
 
     const account: Account = {
       username: session.Username,
