@@ -119,7 +119,7 @@ async function main() {
   logger.info(`Skip sessions: ${skippedSessions}`);
 
   if (accounts.size === 0 && sessions.size === 0) return;
-  const statistics = { created: 0, updated: 0, errored: 0, left: accounts.size + sessions.size };
+  const statistics = { created: 0, updated: 0, errors: 0, left: accounts.size + sessions.size };
 
   logger.info('-'.repeat(40));
   logger.info('Starting tasks');
@@ -163,11 +163,11 @@ async function main() {
 
         await saveSession(sessionsDirectory, session as Session);
 
-        logger.info(`${account.username} | created | left ${--statistics.left}`);
         statistics.created++;
+        logger.info(`${account.username} | created | left ${--statistics.left}`);
       } catch (error) {
+        statistics.errors++;
         logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
-        statistics.errored++;
       } finally {
         if (statistics.left > 0 && queue.size > 0) await delay(30 * 1000);
       }
@@ -204,11 +204,11 @@ async function main() {
 
         await saveSession(sessionsDirectory, session as Session);
 
-        logger.info(`${account.username} | updated | left ${--statistics.left}`);
         statistics.updated++;
+        logger.info(`${account.username} | updated | left ${--statistics.left}`);
       } catch (error) {
+        statistics.errors++;
         logger.warn(`${account.username} | ${error.message.toLowerCase()} | left ${--statistics.left}`);
-        statistics.errored++;
       } finally {
         if (statistics.left > 0 && queue.size > 0) await delay(30 * 1000);
       }
@@ -223,7 +223,7 @@ async function main() {
 
   logger.info(`Sessions created: ${statistics.created}`);
   logger.info(`Sessions updated: ${statistics.updated}`);
-  logger.info(`Errors: ${statistics.errored}`);
+  logger.info(`Errors: ${statistics.errors}`);
 }
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
