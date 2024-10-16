@@ -119,7 +119,7 @@ export async function readProxies(file: string): Promise<string[]> {
     proxies.add(proxy);
   }
 
-  return [...proxies];
+  return [...proxies.values()];
 }
 
 export async function saveSession(directory: string, session: Session) {
