@@ -8,15 +8,14 @@ import { Account } from './interfaces/account.interface';
 import { Secret } from './interfaces/secret.interface';
 import { Session } from './interfaces/session.interface';
 
-export async function readSessions(directory: string): Promise<Map<string, Session>> {
-  const sessions: Map<string, Session> = new Map();
+export async function readSessions(directory: string): Promise<Session[]> {
   await fs.ensureDir(directory);
-
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
-  if (paths.length === 0) return sessions;
 
   paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(directory, file));
-  if (paths.length === 0) return sessions;
+  if (paths.length === 0) return [];
+
+  const sessions: Map<string, Session> = new Map();
 
   const queue = new PQueue({ concurrency: 512 });
   await queue.addAll(
@@ -37,15 +36,15 @@ export async function readSessions(directory: string): Promise<Map<string, Sessi
     }),
   );
 
-  return sessions;
+  return [...sessions.values()];
 }
 
-export async function readAccounts(file: string): Promise<Map<string, Account>> {
-  const accounts: Map<string, Account> = new Map();
+export async function readAccounts(file: string): Promise<Account[]> {
   await fs.ensureFile(file);
-
   const content = await fs.readFile(file, 'utf-8').catch(() => '');
-  if (content.length === 0) return accounts;
+
+  if (content.length === 0) return [];
+  const accounts: Map<string, Account> = new Map();
 
   for (const line of content.split(/\r?\n/)) {
     const parts = line.split(':');
@@ -59,18 +58,17 @@ export async function readAccounts(file: string): Promise<Map<string, Account>> 
     accounts.set(account.username.toLowerCase(), account);
   }
 
-  return accounts;
+  return [...accounts.values()];
 }
 
-export async function readSecrets(directory: string): Promise<Map<string, Secret>> {
-  const secrets: Map<string, Secret> = new Map();
+export async function readSecrets(directory: string): Promise<Secret[]> {
   await fs.ensureDir(directory);
-
   let paths = await fs.readdir(directory).catch(() => [] as string[]);
-  if (paths.length === 0) return secrets;
 
   paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(directory, file));
-  if (paths.length === 0) return secrets;
+  if (paths.length === 0) return [];
+
+  const secrets: Map<string, Secret> = new Map();
 
   const queue = new PQueue({ concurrency: 512 });
   await queue.addAll(
@@ -99,15 +97,14 @@ export async function readSecrets(directory: string): Promise<Map<string, Secret
     }),
   );
 
-  return secrets;
+  return [...secrets.values()];
 }
 
-export async function readProxies(file: string): Promise<Set<string>> {
-  const proxies: Set<string> = new Set();
+export async function readProxies(file: string): Promise<string[]> {
   await fs.ensureFile(file);
-
   const content = await fs.readFile(file, 'utf-8').catch(() => '');
-  if (content.length === 0) return proxies;
+
+  const proxies: Set<string> = new Set();
 
   for (const line of content.split(/\r?\n/)) {
     let proxy: string;
@@ -121,7 +118,7 @@ export async function readProxies(file: string): Promise<Set<string>> {
     proxies.add(proxy);
   }
 
-  return proxies;
+  return [...proxies];
 }
 
 export async function saveSession(directory: string, session: Session) {

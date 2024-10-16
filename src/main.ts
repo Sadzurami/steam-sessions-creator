@@ -60,17 +60,20 @@ async function main() {
   const logger = new Logger('main');
   logger.info('-'.repeat(40));
 
-  const proxies = await readProxies(path.resolve(app.opts().proxies)).then((proxies) => [...proxies.values()]);
+  const proxiesFile = path.resolve(app.opts().proxies);
+  const proxies = await readProxies(proxiesFile);
   logger.info(`Proxies: ${proxies.length}`);
 
-  const secrets = await readSecrets(path.resolve(app.opts().secrets));
+  const secretsDir = path.resolve(app.opts().secrets);
+  const secrets = await readSecrets(secretsDir).then((vv) => new Map(vv.map((v) => [v.username.toLowerCase(), v])));
   logger.info(`Secrets: ${secrets.size}`);
 
-  const accounts = await readAccounts(path.resolve(app.opts().accounts));
+  const accountsFile = path.resolve(app.opts().accounts);
+  const accounts = await readAccounts(accountsFile).then((vv) => new Map(vv.map((v) => [v.username.toLowerCase(), v])));
   logger.info(`Accounts: ${accounts.size}`);
 
-  const sessionsDirectory = path.resolve(app.opts().sessions);
-  const sessions = await readSessions(sessionsDirectory);
+  const sessionsDir = path.resolve(app.opts().sessions);
+  const sessions = await readSessions(sessionsDir).then((vv) => new Map(vv.map((v) => [v.Username.toLowerCase(), v])));
   logger.info(`Sessions: ${sessions.size}`);
 
   const concurrency = ~~app.opts().concurrency || proxies.length || 1;
@@ -161,7 +164,7 @@ async function main() {
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
 
-        await saveSession(sessionsDirectory, session as Session);
+        await saveSession(sessionsDir, session as Session);
 
         statistics.created++;
         logger.info(`${account.username} | created | left ${--statistics.left}`);
@@ -202,7 +205,7 @@ async function main() {
         session.SteamId = bot.steamid;
         session.SchemaVersion = SESSION_SCHEMA_VERSION;
 
-        await saveSession(sessionsDirectory, session as Session);
+        await saveSession(sessionsDir, session as Session);
 
         statistics.updated++;
         logger.info(`${account.username} | updated | left ${--statistics.left}`);
