@@ -222,9 +222,9 @@ async function main() {
   logger.info('All tasks completed');
   logger.info('-'.repeat(40));
 
-  logger.info(`Created: ${statistics.created}`);
-  logger.info(`Updated: ${statistics.updated}`);
-  logger.info(`Errored: ${statistics.errored}`);
+  logger.info(`Sessions created: ${statistics.created}`);
+  logger.info(`Sessions updated: ${statistics.updated}`);
+  logger.info(`Errors: ${statistics.errored}`);
 }
 
 async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAction = false) {
