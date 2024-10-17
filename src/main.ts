@@ -188,6 +188,8 @@ async function main() {
       identitySecret: session.IdentitySecret,
     };
 
+    session.SchemaVersion = SESSION_SCHEMA_VERSION;
+
     queue.add(async () => {
       try {
         const proxy = session.Proxy || getNextProxy();
@@ -203,7 +205,6 @@ async function main() {
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
-        session.SchemaVersion = SESSION_SCHEMA_VERSION;
 
         await saveSession(sessionsDir, session as Session);
 
