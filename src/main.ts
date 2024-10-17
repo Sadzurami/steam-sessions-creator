@@ -18,7 +18,7 @@ const queues: PQueue[] = [];
 
 init()
   .then(() => main())
-  .then(() => exit({}, app.opts().silentExit !== true))
+  .then(() => exit({}, !app.opts().silentExit))
   .catch((error) => exit({ error }, true));
 
 async function init() {
