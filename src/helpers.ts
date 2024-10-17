@@ -123,8 +123,12 @@ export async function readProxies(file: string): Promise<string[]> {
 }
 
 export async function saveSession(directory: string, session: Session) {
-  const file = path.resolve(directory, `${session.Username}.steamsession`);
-  await fs.writeFile(file, JSON.stringify(session, null, 2));
+  try {
+    const file = path.resolve(directory, `${session.Username}.steamsession`);
+    await fs.writeFile(file, JSON.stringify(session, null, 2));
+  } catch (error) {
+    throw new Error('Failed to save session', { cause: error });
+  }
 }
 
 export function decodeRefreshToken(token: string) {
