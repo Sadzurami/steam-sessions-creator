@@ -1,3 +1,3 @@
 export const SESSION_SCHEMA_VERSION = 3;
 
-export const SESSION_EXPIRY_THRESHOLD = 60 * 60 * 24 * 30 * 1000;
+export const SESSION_EXPIRY_THRESHOLD = 30 * 24 * 60 * 60 * 1000;
