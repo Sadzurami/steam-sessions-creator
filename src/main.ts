@@ -135,12 +135,15 @@ async function main() {
   queues.push(queue);
 
   for (const [hashname, account] of accounts.entries()) {
+    account.sharedSecret ||= secrets.get(hashname)?.sharedSecret || null;
+    account.identitySecret ||= secrets.get(hashname)?.identitySecret || null;
+
     const session: Partial<Session> = {
       Username: account.username,
       Password: account.password,
       SteamId: undefined,
-      SharedSecret: account.sharedSecret || secrets.get(hashname)?.sharedSecret || null,
-      IdentitySecret: account.identitySecret || secrets.get(hashname)?.identitySecret || null,
+      SharedSecret: account.sharedSecret,
+      IdentitySecret: account.identitySecret,
       WebRefreshToken: undefined,
       MobileRefreshToken: undefined,
       DesktopRefreshToken: undefined,
