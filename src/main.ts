@@ -10,7 +10,7 @@ import { Logger } from '@sadzurami/logger';
 
 import { Bot } from './bot';
 import { SESSION_EXPIRY_THRESHOLD, SESSION_SCHEMA_VERSION } from './constants';
-import { decodeRefreshToken, readAccounts, readProxies, readSecrets, readSessions, saveSession } from './helpers';
+import { getSessionExpiryDate, readAccounts, readProxies, readSecrets, readSessions, saveSession } from './helpers';
 import { Account } from './interfaces/account.interface';
 import { Session } from './interfaces/session.interface';
 
@@ -81,13 +81,13 @@ async function main() {
 
   let skippedAccounts: number = 0;
   for (const [hashname] of accounts.entries()) {
-    if (app.opts().skipCreate === true) {
+    if (app.opts().skipCreate) {
       accounts.delete(hashname);
       skippedAccounts++;
       continue;
     }
 
-    if (sessions.has(hashname) && app.opts().forceCreate !== true) {
+    if (sessions.has(hashname) && !app.opts().forceCreate) {
       accounts.delete(hashname);
       skippedAccounts++;
       continue;
@@ -96,21 +96,18 @@ async function main() {
 
   let skippedSessions: number = 0;
   for (const [hashname, session] of sessions.entries()) {
-    if (app.opts().skipUpdate === true) {
+    if (app.opts().skipUpdate) {
       sessions.delete(hashname);
       skippedSessions++;
       continue;
     }
 
-    const sessionExpiryTime = Math.min(
-      session.WebRefreshToken ? decodeRefreshToken(session.WebRefreshToken).exp * 1000 : Date.now(),
-      session.MobileRefreshToken ? decodeRefreshToken(session.MobileRefreshToken).exp * 1000 : Date.now(),
-      session.DesktopRefreshToken ? decodeRefreshToken(session.DesktopRefreshToken).exp * 1000 : Date.now(),
-    );
+    let expiryDate: Date = new Date();
+    try {
+      expiryDate = new Date(session.ExpiryDate || getSessionExpiryDate(session));
+    } catch (error) {}
 
-    const sessionExpired = sessionExpiryTime - Date.now() < SESSION_EXPIRY_THRESHOLD;
-
-    if (!sessionExpired && app.opts().forceUpdate !== true) {
+    if (expiryDate.getTime() - Date.now() < SESSION_EXPIRY_THRESHOLD && !app.opts().forceUpdate) {
       sessions.delete(hashname);
       skippedSessions++;
       continue;
@@ -147,6 +144,7 @@ async function main() {
       WebRefreshToken: undefined,
       MobileRefreshToken: undefined,
       DesktopRefreshToken: undefined,
+      ExpiryDate: undefined,
       Proxy: null,
       SchemaVersion: SESSION_SCHEMA_VERSION,
     };
@@ -166,6 +164,7 @@ async function main() {
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
+        session.ExpiryDate = getSessionExpiryDate(session as Session).toISOString();
 
         await saveSession(sessionsDir, session as Session);
 
@@ -208,6 +207,7 @@ async function main() {
 
         session.Proxy = proxy && app.opts().preserveProxy === true ? proxy : null;
         session.SteamId = bot.steamid;
+        session.ExpiryDate = getSessionExpiryDate(session as Session).toISOString();
 
         await saveSession(sessionsDir, session as Session);
 

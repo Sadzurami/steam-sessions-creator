@@ -7,6 +7,7 @@ export interface Session {
   WebRefreshToken: string;
   MobileRefreshToken: string;
   DesktopRefreshToken: string;
+  ExpiryDate?: string;
   Proxy?: string | null;
   SchemaVersion: number;
 }

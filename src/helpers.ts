@@ -131,6 +131,20 @@ export async function saveSession(directory: string, session: Session) {
   }
 }
 
+export function getSessionExpiryDate(session: Session): Date {
+  try {
+    const timestamp = Math.min(
+      decodeRefreshToken(session.WebRefreshToken).exp,
+      decodeRefreshToken(session.MobileRefreshToken).exp,
+      decodeRefreshToken(session.DesktopRefreshToken).exp,
+    );
+
+    return new Date(timestamp * 1000);
+  } catch (error) {
+    throw new Error('Failed to get session expiry date', { cause: error });
+  }
+}
+
 export function decodeRefreshToken(token: string) {
   try {
     const parts = token.split('.');
@@ -147,7 +161,6 @@ export function decodeRefreshToken(token: string) {
 }
 
 // https://github.com/DoctorMcKay/node-steam-session/issues/44
-// https://github.com/DoctorMcKay/node-steam-session/pull/45
 export function createMachineName(accountName: string) {
   const hash = createHash('sha1');
   hash.update(accountName || hostname());

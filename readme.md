@@ -19,21 +19,23 @@ Simple app for creating and updating Steam sessions (.steamsession files)
   "WebRefreshToken": "...",
   "MobileRefreshToken": "...",
   "DesktopRefreshToken": "...",
+  "ExpiryDate": "...",
 
   "Proxy": "...",
 
-  "SchemaVersion": 3
+  "SchemaVersion": 4
 }
 ```
 
-- `Username` - Steam username
-- `Password` - Steam password
-- `SteamId` - Steam account id
+- `Username` - steam username
+- `Password` - steam password
+- `SteamId` - steam account id
 - `SharedSecret` - mobile shared secret, or `null` if mobile-guard disabled
 - `IdentitySecret` - mobile identity secret, or `null` if mobile-guard disabled
 - `WebRefreshToken` - browser refresh token
 - `MobileRefreshToken` - mobile app refresh token
 - `DesktopRefreshToken` - desktop app refresh token
+- `ExpiryDate` - session expiry date
 - `Proxy` - assigned proxy or `null`, if `--preserve-proxy` is not used
 - `SchemaVersion` - schema version number
 
