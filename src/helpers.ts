@@ -161,7 +161,7 @@ export function decodeRefreshToken(token: string) {
 }
 
 // https://github.com/DoctorMcKay/node-steam-session/issues/44
-export function createMachineName(accountName: string) {
+export function createMachineName(accountName: string): string {
   const hash = createHash('sha1');
   hash.update(accountName || hostname());
 
