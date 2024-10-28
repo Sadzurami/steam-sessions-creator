@@ -42,8 +42,10 @@ export class Bot {
         break;
       case 'desktop':
         platform = EAuthTokenPlatformType.SteamClient;
+
         options.machineId = true;
         options.machineFriendlyName = createMachineName(credentials.accountName);
+
         break;
     }
 
@@ -65,14 +67,15 @@ export class Bot {
         session.once('timeout', () => reject(new Error('Login attempt timed out')));
         session.once('error', (error) => reject(new Error(`Login attempt failed: ${error.message}`, { cause: error })));
       });
+
+      this.steamid = session.steamID.toString();
     } catch (error) {
       throw error;
     } finally {
       session.cancelLoginAttempt();
-      this.httpAgent.destroy();
+      options.agent.destroy();
     }
 
-    this.steamid = session.steamID.toString();
     return session.refreshToken;
   }
 
