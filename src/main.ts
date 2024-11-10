@@ -18,7 +18,7 @@ const queues: PQueue[] = [];
 
 init()
   .then(() => main())
-  .then(() => exit({}, !app.opts().silentExit))
+  .then(() => exit({}, true))
   .catch((error) => exit({ error }, true));
 
 async function init() {
@@ -251,7 +251,7 @@ async function exit(options: { signal?: string; error?: Error } = {}, awaitKeyAc
 
   if (options.signal) logger.info(`Shutdown signal: ${options.signal}`);
 
-  if (awaitKeyAction) {
+  if (awaitKeyAction && !app.opts().silentExit) {
     logger.info('Press any key to exit');
     process.stdin.setRawMode(true).resume();
 
