@@ -50,7 +50,7 @@ Simple app for creating and updating Steam sessions (.steamsession files)
 - Download the latest [release](https://github.com/Sadzurami/steam-sessions-creator/releases#latest)
 - Place steam accounts in `accounts.txt`
 - Place proxies in `proxies.txt` (optional)
-- Place secrets in `secrets` directory
+- Place secrets in `secrets` directory (optional)
 - Start the app
 
 ## Usage
