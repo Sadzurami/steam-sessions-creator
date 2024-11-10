@@ -30,7 +30,7 @@ export async function readSessions(directory: string): Promise<Session[]> {
       }
 
       if (typeof session !== 'object') return;
-      if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 2) return;
+      if (typeof session.SchemaVersion !== 'number' || session.SchemaVersion < 1) return;
 
       sessions.set(session.Username.toLowerCase(), session);
     }),
