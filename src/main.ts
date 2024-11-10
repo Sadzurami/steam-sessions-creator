@@ -107,7 +107,7 @@ async function main() {
       expiryDate = new Date(session.ExpiryDate || getSessionExpiryDate(session));
     } catch (error) {}
 
-    if (expiryDate.getTime() - Date.now() < SESSION_EXPIRY_THRESHOLD && !app.opts().forceUpdate) {
+    if (expiryDate.getTime() - Date.now() > SESSION_EXPIRY_THRESHOLD && !app.opts().forceUpdate) {
       sessions.delete(hashname);
       skippedSessions++;
       continue;
