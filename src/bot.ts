@@ -1,5 +1,5 @@
 import { HttpsProxyAgent } from 'hpagent';
-import { Agent } from 'https';
+import { Agent, AgentOptions } from 'https';
 import { EAuthTokenPlatformType, LoginSession } from 'steam-session';
 import {
   ConstructorOptions as LoginSessionOptions,
@@ -80,10 +80,8 @@ export class Bot {
   }
 
   private createHttpAgent() {
-    const agent = this.proxy
-      ? new HttpsProxyAgent({ proxy: this.proxy, keepAlive: true })
-      : new Agent({ keepAlive: true });
+    const options: AgentOptions = { keepAlive: true, timeout: 65000, maxSockets: 50 };
 
-    return agent;
+    return this.proxy ? new HttpsProxyAgent({ proxy: this.proxy, ...options }) : new Agent(options);
   }
 }
