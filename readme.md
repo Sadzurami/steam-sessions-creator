@@ -4,7 +4,7 @@ Simple app for creating and updating Steam sessions (.steamsession files)
 
 ## What is `.steamsession`
 
-> Syntactic sugar over the various files required by [Steam](https://store.steampowered.com), placed in one file.
+> Syntactic sugar over the various files required by [Steam](https://store.steampowered.com), placed in one file
 
 ```json
 {
@@ -48,9 +48,9 @@ Simple app for creating and updating Steam sessions (.steamsession files)
 ## How to start
 
 - Download the latest [release](https://github.com/Sadzurami/steam-sessions-creator/releases#latest)
-- Put your steam accounts to `accounts.txt`
-- Put your proxies to `proxies.txt` (optional)
-- Put your secrets (mafiles) to `secrets` directory
+- Place steam accounts in `accounts.txt`
+- Place proxies in `proxies.txt` (optional)
+- Place secrets (mafiles) in `secrets` directory
 - Start the app
 
 ## Usage
