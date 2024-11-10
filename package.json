@@ -38,7 +38,7 @@
   "devDependencies": {
     "@sadzurami/eslint-config": "^1.0.1",
     "@sadzurami/prettier-config": "^1.0.0",
-    "@sadzurami/ts-config": "^1.0.0",
+    "@sadzurami/ts-config": "^1.0.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^18",
     "@types/steam-totp": "^2.1.2",

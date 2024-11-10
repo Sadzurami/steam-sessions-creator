@@ -387,10 +387,10 @@
   resolved "https://registry.yarnpkg.com/@sadzurami/prettier-config/-/prettier-config-1.0.0.tgz#9e36baa72f99e9b66143236bd7cb4e743fa66e59"
   integrity sha512-0EZ44u+am7HK3z47UsE0gmFhWLTzC1QrCRnI0W31M/JlylXBoGnAj5wbLXJLVQTzB9n9eNM0d1l6x0WSnyVJvw==
 
-"@sadzurami/ts-config@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@sadzurami/ts-config/-/ts-config-1.0.0.tgz#b50073a4a4c04fcbaf844e13ce22a3cdbebe8ce6"
-  integrity sha512-yEV8rN1wxAm6YjoSptkuda3yBjS//qz9sTufQFQp2gOI1UynA+8bGcFVnlXLQu4yFbhw0eiZ2wOfhrOZIl6fCg==
+"@sadzurami/ts-config@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@sadzurami/ts-config/-/ts-config-1.0.1.tgz#17efe6880cdb3ecd21d59c3e366ac9464eaf05e4"
+  integrity sha512-1dYep13rnfbflD/EgRlrYIVNE9byjM7PH21HwygwzSJg7UHuyVbucvFL1dJeC6gpyROgaeDC9ABSUlrYw72SSQ==
 
 "@sindresorhus/merge-streams@^2.1.0":
   version "2.3.0"
