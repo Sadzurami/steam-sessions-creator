@@ -109,3 +109,7 @@ Add more proxies.
 ### How to use the same proxy for creation and future updates
 
 Use option `--preserve-proxy`.
+
+## Related
+
+- [steam-auth-server](https://github.com/Sadzurami/steam-auth-server) - Node.js server to create refresh & access tokens and cookies for Steam
