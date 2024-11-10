@@ -8,11 +8,11 @@ import { Account } from './interfaces/account.interface';
 import { Secret } from './interfaces/secret.interface';
 import { Session } from './interfaces/session.interface';
 
-export async function readSessions(directory: string): Promise<Session[]> {
-  await fs.ensureDir(directory);
-  let paths = await fs.readdir(directory).catch(() => [] as string[]);
+export async function readSessions(dir: string): Promise<Session[]> {
+  // prettier-ignore
+  let paths: string[] = await fs.ensureDir(dir).then(() => fs.readdir(dir)).catch(() => []);
 
-  paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(directory, file));
+  paths = paths.filter((file) => file.endsWith('.steamsession')).map((file) => path.join(dir, file));
   if (paths.length === 0) return [];
 
   const sessions: Map<string, Session> = new Map();
@@ -40,8 +40,8 @@ export async function readSessions(directory: string): Promise<Session[]> {
 }
 
 export async function readAccounts(file: string): Promise<Account[]> {
-  await fs.ensureFile(file);
-  const content = await fs.readFile(file, 'utf-8').catch(() => '');
+  // prettier-ignore
+  const content = await fs.ensureFile(file).then(() => fs.readFile(file, 'utf-8')).catch(() => '');
 
   if (content.length === 0) return [];
   const accounts: Map<string, Account> = new Map();
@@ -61,11 +61,11 @@ export async function readAccounts(file: string): Promise<Account[]> {
   return [...accounts.values()];
 }
 
-export async function readSecrets(directory: string): Promise<Secret[]> {
-  await fs.ensureDir(directory);
-  let paths = await fs.readdir(directory).catch(() => [] as string[]);
+export async function readSecrets(dir: string): Promise<Secret[]> {
+  // prettier-ignore
+  let paths: string[] = await fs.ensureDir(dir).then(() => fs.readdir(dir)).catch(() => []);
 
-  paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(directory, file));
+  paths = paths.filter((file) => file.toLowerCase().endsWith('.mafile')).map((file) => path.join(dir, file));
   if (paths.length === 0) return [];
 
   const secrets: Map<string, Secret> = new Map();
@@ -101,8 +101,8 @@ export async function readSecrets(directory: string): Promise<Secret[]> {
 }
 
 export async function readProxies(file: string): Promise<string[]> {
-  await fs.ensureFile(file);
-  const content = await fs.readFile(file, 'utf-8').catch(() => '');
+  // prettier-ignore
+  const content = await fs.ensureFile(file).then(() => fs.readFile(file, 'utf-8')).catch(() => '');
 
   if (content.length === 0) return [];
   const proxies: Set<string> = new Set();
@@ -122,9 +122,9 @@ export async function readProxies(file: string): Promise<string[]> {
   return [...proxies.values()];
 }
 
-export async function saveSession(directory: string, session: Session) {
+export async function saveSession(dir: string, session: Session) {
   try {
-    const file = path.resolve(directory, `${session.Username}.steamsession`);
+    const file = path.resolve(dir, `${session.Username}.steamsession`);
     await fs.writeFile(file, JSON.stringify(session, null, 2));
   } catch (error) {
     throw new Error('Failed to save session', { cause: error });
